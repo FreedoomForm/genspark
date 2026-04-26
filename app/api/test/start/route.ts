@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { QUESTIONS } from '@/lib/questions';
 
+export const runtime = 'nodejs';
+
 // Pick 20 unique random questions out of 200.
 function pickRandom20(): number[] {
   const ids = QUESTIONS.map((q) => q.id);
@@ -14,40 +16,45 @@ function pickRandom20(): number[] {
 }
 
 export async function POST() {
-  const session = await getSession();
-  if (!session || session.role !== 'USER') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const existing = await prisma.attempt.findUnique({ where: { userId: session.sub } });
-  if (existing) {
-    // Single attempt rule. If finished — block; if not finished — return existing.
-    if (existing.finishedAt) {
-      return NextResponse.json({ error: 'already_done' }, { status: 409 });
+  try {
+    const session = await getSession();
+    if (!session || session.role !== 'USER') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    return NextResponse.json({
-      attemptId: existing.id,
-      questionIds: JSON.parse(existing.questionIds) as number[],
-      correctCount: existing.correctCount,
-      incorrectCount: existing.incorrectCount,
-      totalCount: existing.totalCount,
+
+    const existing = await prisma.attempt.findUnique({ where: { userId: session.sub } });
+    if (existing) {
+      // Single attempt rule. If finished — block; if not finished — return existing.
+      if (existing.finishedAt) {
+        return NextResponse.json({ error: 'already_done' }, { status: 409 });
+      }
+      return NextResponse.json({
+        attemptId: existing.id,
+        questionIds: JSON.parse(existing.questionIds) as number[],
+        correctCount: existing.correctCount,
+        incorrectCount: existing.incorrectCount,
+        totalCount: existing.totalCount,
+      });
+    }
+
+    const ids = pickRandom20();
+    const attempt = await prisma.attempt.create({
+      data: {
+        userId: session.sub,
+        questionIds: JSON.stringify(ids),
+        totalCount: 20,
+      },
     });
-  }
 
-  const ids = pickRandom20();
-  const attempt = await prisma.attempt.create({
-    data: {
-      userId: session.sub,
-      questionIds: JSON.stringify(ids),
+    return NextResponse.json({
+      attemptId: attempt.id,
+      questionIds: ids,
+      correctCount: 0,
+      incorrectCount: 0,
       totalCount: 20,
-    },
-  });
-
-  return NextResponse.json({
-    attemptId: attempt.id,
-    questionIds: ids,
-    correctCount: 0,
-    incorrectCount: 0,
-    totalCount: 20,
-  });
+    });
+  } catch (e: any) {
+    console.error('TEST_START_ERROR', e);
+    return NextResponse.json({ error: 'Internal server error', detail: e?.message || String(e) }, { status: 500 });
+  }
 }
