@@ -28,10 +28,13 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, admin }),
       });
-      const data = await res.json();
+      let data: any = {};
+      try { data = await res.json(); } catch { /* сервер вернул не-JSON */ }
       if (!res.ok) { setErr(data.error || t(locale, 'common_error')); return; }
       router.push(data.role === 'ADMIN' ? '/admin' : '/test');
       router.refresh();
+    } catch {
+      setErr(t(locale, 'common_error'));
     } finally {
       setLoading(false);
     }
