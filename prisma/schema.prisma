@@ -31,7 +31,7 @@ model Attempt {
   userId         String    @unique
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   questionIds    String    // JSON array of 20 selected question IDs (as strings)
-  optionsShuffle String    // JSON object mapping questionId -> shuffled indices order
+  optionsShuffle String?   // JSON object mapping questionId -> shuffled indices order
   ipAddress      String?   // IP address of the user who took the test
   startedAt      DateTime  @default(now())
   finishedAt     DateTime?
