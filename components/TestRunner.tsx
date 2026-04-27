@@ -74,6 +74,12 @@ export default function TestRunner({ locale, startMode }: { locale: Locale; star
         setState({ kind: 'finished', correct: d.correctCount ?? 0, incorrect: d.incorrectCount ?? 0, total: d.totalCount ?? 20 });
         return;
       }
+      if (res.status === 429) {
+        // IP limit exceeded - one test per month per IP
+        const data = await res.json();
+        setState({ kind: 'error', msg: data.message || t(locale, 'ip_limit_exceeded') });
+        return;
+      }
       if (!res.ok) throw new Error('start failed');
       // Now load full state with public questions.
       await fetchState();

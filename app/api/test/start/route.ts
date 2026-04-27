@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { QUESTIONS } from '@/lib/questions';
@@ -15,11 +15,48 @@ function pickRandom20(): number[] {
   return ids.slice(0, 20);
 }
 
-export async function POST() {
+// Get client IP address from request
+function getClientIP(req: NextRequest): string {
+  // Check various headers for IP (Vercel, proxies, etc.)
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  const realIP = req.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  // Fallback
+  return 'unknown';
+}
+
+export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.role !== 'USER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const clientIP = getClientIP(req);
+
+    // Check if this IP has already had an attempt in the current month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const ipAttemptThisMonth = await prisma.attempt.findFirst({
+      where: {
+        ipAddress: clientIP,
+        startedAt: {
+          gte: startOfMonth,
+        },
+      },
+    });
+
+    if (ipAttemptThisMonth) {
+      return NextResponse.json({
+        error: 'ip_limit_exceeded',
+        message: 'Bu IP manzildan bu oyda allaqachon test topshirilgan. Keyingi oy qaytadan urinib ko\'ring.'
+      }, { status: 429 });
     }
 
     const existing = await prisma.attempt.findUnique({ where: { userId: session.sub } });
@@ -43,6 +80,7 @@ export async function POST() {
         userId: session.sub,
         questionIds: JSON.stringify(ids),
         totalCount: 20,
+        ipAddress: clientIP,
       },
     });
 
