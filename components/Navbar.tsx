@@ -35,11 +35,6 @@ export default function Navbar({ locale, session }: { locale: Locale; session: S
               {t(locale, 'nav_test')}
             </Link>
           )}
-          {session?.role === 'ADMIN' && (
-            <Link href="/admin/questions" className="hidden sm:inline-block px-3 py-1.5 rounded-md bg-lume-navy text-white hover:bg-lume-navy/90">
-              {t(locale, 'admin_see_all_tests')}
-            </Link>
-          )}
 
           {!session && (
             <>
