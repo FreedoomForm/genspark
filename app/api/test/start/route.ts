@@ -15,6 +15,16 @@ function pickRandom20(): number[] {
   return ids.slice(0, 20);
 }
 
+// Generate shuffled indices for options (e.g., [2, 0, 3, 1] means option 2 is now at position 0)
+function generateShuffledIndices(length: number): number[] {
+  const indices = Array.from({ length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
 // Get client IP address from request
 function getClientIP(req: NextRequest): string {
   // Check various headers for IP (Vercel, proxies, etc.)
@@ -75,10 +85,21 @@ export async function POST(req: NextRequest) {
     }
 
     const ids = pickRandom20();
+
+    // Generate shuffled options for each question
+    const optionsShuffle: Record<number, number[]> = {};
+    for (const id of ids) {
+      const q = QUESTIONS.find(q => q.id === id);
+      if (q) {
+        optionsShuffle[id] = generateShuffledIndices(q.ru.opts.length);
+      }
+    }
+
     const attempt = await prisma.attempt.create({
       data: {
         userId: session.sub,
         questionIds: JSON.stringify(ids),
+        optionsShuffle: JSON.stringify(optionsShuffle),
         totalCount: 20,
         ipAddress: clientIP,
       },

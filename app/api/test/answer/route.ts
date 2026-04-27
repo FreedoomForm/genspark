@@ -36,9 +36,15 @@ export async function POST(req: NextRequest) {
       where: { attemptId_questionId: { attemptId: attempt.id, questionId: parsed.questionId } },
     });
     if (existing) {
+      // Need to calculate shuffled correct index for the response
+      const optionsShuffle: Record<number, number[]> = JSON.parse(attempt.optionsShuffle || '{}');
+      const shuffle = optionsShuffle[parsed.questionId] || [];
+      const q = getQuestionById(parsed.questionId);
+      const shuffledCorrectIndex = shuffle.indexOf(q?.correct ?? 0);
+
       return NextResponse.json({
         isCorrect: existing.isCorrect,
-        correctIndex: getQuestionById(parsed.questionId)?.correct ?? -1,
+        correctIndex: shuffledCorrectIndex,
         correctCount: attempt.correctCount,
         incorrectCount: attempt.incorrectCount,
         totalCount: attempt.totalCount,
@@ -49,14 +55,27 @@ export async function POST(req: NextRequest) {
     const q = getQuestionById(parsed.questionId);
     if (!q) return NextResponse.json({ error: 'unknown_question' }, { status: 400 });
 
-    const isCorrect = parsed.selected === q.correct;
+    // Get the shuffle order for this question
+    const optionsShuffle: Record<number, number[]> = JSON.parse(attempt.optionsShuffle || '{}');
+    const shuffle = optionsShuffle[parsed.questionId] || Array.from({ length: q.ru.opts.length }, (_, i) => i);
+
+    // Map selected index (in shuffled order) back to original index
+    // If user selected position 1, and shuffle = [2, 0, 3, 1]
+    // Then originalSelected = shuffle[1] = 0
+    const originalSelected = shuffle[parsed.selected];
+
+    // Check if correct
+    const isCorrect = originalSelected === q.correct;
+
+    // Find where the correct answer is in the shuffled order (for revealing to user)
+    const shuffledCorrectIndex = shuffle.indexOf(q.correct);
 
     const updated = await prisma.$transaction(async (tx) => {
       await tx.answer.create({
         data: {
           attemptId: attempt.id,
           questionId: parsed.questionId,
-          selected: parsed.selected,
+          selected: parsed.selected, // Store the shuffled index (what user saw)
           isCorrect,
         },
       });
@@ -80,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       isCorrect,
-      correctIndex: q.correct,
+      correctIndex: shuffledCorrectIndex, // Return position in shuffled order
       correctCount: updated.correctCount,
       incorrectCount: updated.incorrectCount,
       totalCount: updated.totalCount,
