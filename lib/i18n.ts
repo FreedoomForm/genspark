@@ -75,6 +75,7 @@ const ru: Dict = {
 
   // Admin
   admin_title: 'Панель администратора',
+  admin_see_all_tests: 'Все вопросы',
   admin_search_placeholder: 'Поиск по имени или e-mail…',
   admin_total_users: 'Всего пользователей',
   admin_total_attempts: 'Всего попыток',
@@ -160,6 +161,7 @@ const uz: Dict = {
   test_view_screenshot: 'Savolga skrinshot',
 
   admin_title: 'Administrator paneli',
+  admin_see_all_tests: 'Barcha savollar',
   admin_search_placeholder: 'Ism yoki e-mail bo‘yicha qidirish…',
   admin_total_users: 'Jami foydalanuvchilar',
   admin_total_attempts: 'Jami urinishlar',

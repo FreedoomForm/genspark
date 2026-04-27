@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Locale, t } from '@/lib/i18n';
 
 type Attempt = {
@@ -62,7 +63,12 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-lume-navy">{t(locale, 'admin_title')}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-lume-navy">{t(locale, 'admin_title')}</h1>
+        <Link href="/admin/questions" className="btn-primary text-sm">
+          {t(locale, 'admin_see_all_tests')}
+        </Link>
+      </div>
 
       {/* KPIs */}
       <div className="grid gap-3 sm:grid-cols-3">
