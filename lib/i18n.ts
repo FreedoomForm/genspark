@@ -95,6 +95,7 @@ const ru: Dict = {
   common_error: 'Произошла ошибка',
   common_save: 'Сохранить',
   common_cancel: 'Отмена',
+  common_edit: 'Редактировать',
   ip_limit_exceeded: 'С этого IP-адреса в этом месяце уже был пройден тест. Попробуйте в следующем месяце.',
 };
 
@@ -180,6 +181,7 @@ const uz: Dict = {
   common_error: 'Xatolik yuz berdi',
   common_save: 'Saqlash',
   common_cancel: 'Bekor qilish',
+  common_edit: 'Tahrirlash',
   ip_limit_exceeded: 'Bu IP manzildan bu oyda allaqachon test topshirilgan. Keyingi oy qaytadan urinib ko‘ring.',
 };
 

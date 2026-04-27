@@ -53,3 +53,16 @@ model Answer {
 
   @@unique([attemptId, questionId])
 }
+
+model Question {
+  id          Int      @id
+  category    String
+  screenshot  String?
+  ruQuestion  String
+  ruOptions   String[] // Array of answer options in Russian
+  uzQuestion  String
+  uzOptions   String[] // Array of answer options in Uzbek
+  correct     Int      // Index of correct answer
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

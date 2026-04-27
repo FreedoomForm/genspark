@@ -48,15 +48,9 @@ export default function Navbar({ locale, session }: { locale: Locale; session: S
           )}
 
           {session && (
-            <>
-              <span className="hidden sm:inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                {session.name}
-              </span>
-              <button onClick={logout} className="btn-secondary !py-1.5 !px-3 text-xs">
-                {t(locale, 'nav_logout')}
-              </button>
-            </>
+            <button onClick={logout} className="btn-secondary !py-1.5 !px-3 text-xs">
+              {t(locale, 'nav_logout')}
+            </button>
           )}
 
           <div className="ml-2 inline-flex rounded-full border border-gray-200 bg-white p-0.5 text-xs">
