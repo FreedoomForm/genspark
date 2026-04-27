@@ -841,3 +841,14 @@ export const QUESTIONS: Question[] = [
     { q: 'Как деактивировать кассу?', opts: ['Через редактирование или удаление', 'Автоматически', 'Это невозможно', 'Через техподдержку'] },
     { q: 'Kassani qanday faolsizlashtirish mumkin?', opts: ['Tahrirlash yoki o\'chirish orqali', 'Avtomatik ravishda', 'Buni qilish mumkin emas', 'Texnik yordam orqali'] }, 0),
 ];
+
+// Helper function to get a question by ID
+export function getQuestionById(id: number): Question | undefined {
+  return QUESTIONS.find(q => q.id === id);
+}
+
+// Helper function to create a public version of a question (without correct answer)
+export function publicQuestion(q: Question): Omit<Question, 'correct'> {
+  const { correct, ...rest } = q;
+  return rest;
+}
