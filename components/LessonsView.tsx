@@ -35,10 +35,15 @@ const categoryLabels: Record<string, { ru: string; uz: string }> = {
   cabinet: { ru: 'Кабинет', uz: 'Kabinet' },
 };
 
+const categories = ['warehouse', 'reference', 'finance', 'reports', 'settings', 'cabinet'];
+
 export default function LessonsView({ locale }: { locale: Locale }) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(true);
 
   useEffect(() => {
     fetchLessons();
@@ -81,10 +86,10 @@ export default function LessonsView({ locale }: { locale: Locale }) {
   }
 
   function goNext() {
-    if (currentIndex < lessons.length - 1) {
+    if (currentIndex < filteredLessons.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
-      markLessonViewed(lessons[nextIndex]);
+      markLessonViewed(filteredLessons[nextIndex]);
     }
   }
 
@@ -94,10 +99,28 @@ export default function LessonsView({ locale }: { locale: Locale }) {
     }
   }
 
+  // Filter lessons based on category and search
+  const filteredLessons = lessons.filter(l => {
+    const matchesCategory = !selectedCategory || l.category === selectedCategory;
+    const name = locale === 'uz' ? l.uzName : l.ruName;
+    const description = locale === 'uz' ? l.uzDescription : l.ruDescription;
+    const matchesSearch = !searchQuery ||
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    return matchesCategory && matchesSearch;
+  });
+
+  // Reset current index when filters change
+  useEffect(() => {
+    if (filteredLessons.length > 0 && currentIndex >= filteredLessons.length) {
+      setCurrentIndex(0);
+    }
+  }, [selectedCategory, searchQuery]);
+
   const viewedCount = lessons.filter((l) => l.viewed).length;
   const totalLessons = lessons.length;
   const progressPercent = totalLessons > 0 ? Math.round((viewedCount / totalLessons) * 100) : 0;
-  const currentLesson = lessons[currentIndex];
+  const currentLesson = filteredLessons[currentIndex];
 
   if (loading) {
     return (
@@ -110,6 +133,47 @@ export default function LessonsView({ locale }: { locale: Locale }) {
   if (lessons.length === 0) {
     return (
       <div className="mx-auto max-w-2xl">
+        <div className="card p-8 text-center text-gray-500">
+          {locale === 'uz' ? 'Darslar topilmadi' : 'Уроки не найдены'}
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentLesson) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-gray-400 hover:text-gray-600 text-sm">
+            ← {t(locale, 'test_back_home')}
+          </Link>
+        </div>
+
+        {/* Filters */}
+        <div className="card p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              className="input flex-1"
+              placeholder={locale === 'uz' ? 'Darslarni qidirish...' : 'Поиск по урокам...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <select
+              className="input w-full sm:w-48"
+              value={selectedCategory || ''}
+              onChange={(e) => setSelectedCategory(e.target.value || null)}
+            >
+              <option value="">{locale === 'uz' ? 'Barcha kategoriyalar' : 'Все категории'}</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>
+                  {categoryLabels[cat]?.[locale] || cat}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         <div className="card p-8 text-center text-gray-500">
           {locale === 'uz' ? 'Darslar topilmadi' : 'Уроки не найдены'}
         </div>
@@ -143,7 +207,12 @@ export default function LessonsView({ locale }: { locale: Locale }) {
           ← {t(locale, 'test_back_home')}
         </Link>
         <span className="text-sm text-gray-500">
-          {currentIndex + 1} / {totalLessons}
+          {currentIndex + 1} / {filteredLessons.length}
+          {selectedCategory && (
+            <span className="ml-2 text-lume-purple">
+              ({categoryLabels[selectedCategory]?.[locale] || selectedCategory})
+            </span>
+          )}
         </span>
       </div>
 
@@ -162,6 +231,55 @@ export default function LessonsView({ locale }: { locale: Locale }) {
           />
         </div>
       </div>
+
+      {/* Filters toggle button */}
+      <button
+        onClick={() => setShowFilters(!showFilters)}
+        className="w-full card p-3 flex items-center justify-between text-sm hover:bg-gray-50 transition"
+      >
+        <span className="font-medium text-lume-navy">
+          {locale === 'uz' ? 'Qidiruv va kategoriyalar' : 'Поиск и категории'}
+        </span>
+        <svg
+          className={`w-5 h-5 text-gray-400 transition-transform ${showFilters ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="card p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              className="input flex-1"
+              placeholder={locale === 'uz' ? 'Darslarni qidirish...' : 'Поиск по урокам...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <select
+              className="input w-full sm:w-48"
+              value={selectedCategory || ''}
+              onChange={(e) => setSelectedCategory(e.target.value || null)}
+            >
+              <option value="">{locale === 'uz' ? 'Barcha kategoriyalar' : 'Все категории'}</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>
+                  {categoryLabels[cat]?.[locale] || cat}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mt-2 text-xs text-gray-400">
+            {locale === 'uz'
+              ? `Topildi: ${filteredLessons.length} ta dars`
+              : `Найдено: ${filteredLessons.length} уроков`}
+          </div>
+        </div>
+      )}
 
       {/* Lesson card */}
       <div className="card p-6">
@@ -283,7 +401,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
             ← {locale === 'uz' ? 'Oldingi' : 'Назад'}
           </button>
 
-          {currentIndex < lessons.length - 1 ? (
+          {currentIndex < filteredLessons.length - 1 ? (
             <button onClick={goNext} className="btn-primary">
               {locale === 'uz' ? 'Keyingi' : 'Далее'} →
             </button>
@@ -301,25 +419,28 @@ export default function LessonsView({ locale }: { locale: Locale }) {
           {locale === 'uz' ? 'Darslarga o\'tish:' : 'Перейти к уроку:'}
         </div>
         <div className="flex justify-center gap-1 flex-wrap max-h-32 overflow-y-auto">
-          {lessons.map((lesson, idx) => (
-            <button
-              key={lesson.id}
-              onClick={() => {
-                setCurrentIndex(idx);
-                markLessonViewed(lessons[idx]);
-              }}
-              title={locale === 'uz' ? lesson.uzName : lesson.ruName}
-              className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
-                idx === currentIndex
-                  ? 'bg-lume-navy text-white shadow-md scale-110'
-                  : lesson.viewed
-                  ? 'bg-white text-lume-navy border-2 border-lume-navy hover:bg-lume-navy hover:text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {idx + 1}
-            </button>
-          ))}
+          {filteredLessons.map((lesson, idx) => {
+            const originalIdx = lessons.findIndex(l => l.id === lesson.id);
+            return (
+              <button
+                key={lesson.id}
+                onClick={() => {
+                  setCurrentIndex(idx);
+                  markLessonViewed(filteredLessons[idx]);
+                }}
+                title={locale === 'uz' ? lesson.uzName : lesson.ruName}
+                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
+                  idx === currentIndex
+                    ? 'bg-lume-navy text-white shadow-md scale-110'
+                    : lesson.viewed
+                    ? 'bg-white text-lume-navy border-2 border-lume-navy hover:bg-lume-navy hover:text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {originalIdx + 1}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
