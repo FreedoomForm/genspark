@@ -37,10 +37,7 @@ export default async function TestPage() {
             {attempt.correctCount}/{attempt.totalCount}
           </div>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link 
-              href="/lessons" 
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-lume-navy text-white px-6 py-3 font-semibold hover:bg-lume-blue transition"
-            >
+            <Link href="/lessons" className="btn-primary">
               📚 {locale === 'uz' ? 'Darslar' : 'Уроки'} →
             </Link>
             <Link href="/" className="btn-secondary">{t(locale, 'test_back_home')}</Link>
@@ -61,10 +58,7 @@ export default async function TestPage() {
           <p className="text-sm text-white/80 mb-4">
             {locale === 'uz' ? 'Testdan oldin tizimni o‘rganing' : 'Изучите систему перед тестом'}
           </p>
-          <Link 
-            href="/lessons" 
-            className="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-white text-lume-navy px-6 py-3 font-semibold hover:bg-gray-100 transition"
-          >
+          <Link href="/lessons" className="btn bg-white text-lume-navy hover:bg-gray-100">
             {locale === 'uz' ? 'Darslar' : 'Уроки'} →
           </Link>
         </div>
