@@ -227,24 +227,32 @@ export default function LessonsView({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      {/* Lesson dots navigation */}
-      <div className="flex justify-center gap-1 flex-wrap">
-        {lessons.map((lesson, idx) => (
-          <button
-            key={lesson.id}
-            onClick={() => {
-              setCurrentIndex(idx);
-              markLessonViewed(lessons[idx]);
-            }}
-            className={`w-2 h-2 rounded-full transition-all ${
-              idx === currentIndex
-                ? 'w-4 bg-lume-purple'
-                : lesson.viewed
-                ? 'bg-lume-purple/50'
-                : 'bg-gray-300'
-            }`}
-          />
-        ))}
+      {/* Lesson navigation with numbers */}
+      <div className="card p-4">
+        <div className="text-xs text-gray-500 mb-2 text-center">
+          {locale === 'uz' ? 'Darslarga o\'tish:' : 'Перейти к уроку:'}
+        </div>
+        <div className="flex justify-center gap-1 flex-wrap max-h-32 overflow-y-auto">
+          {lessons.map((lesson, idx) => (
+            <button
+              key={lesson.id}
+              onClick={() => {
+                setCurrentIndex(idx);
+                markLessonViewed(lessons[idx]);
+              }}
+              title={locale === 'uz' ? lesson.uzName : lesson.ruName}
+              className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
+                idx === currentIndex
+                  ? 'bg-lume-navy text-white shadow-md scale-110'
+                  : lesson.viewed
+                  ? 'bg-lume-purple text-white hover:bg-lume-blue'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {idx + 1}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
