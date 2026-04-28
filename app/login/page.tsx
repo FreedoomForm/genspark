@@ -15,21 +15,21 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [admin, setAdmin] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); setErr(null);
+    setLoading(true);
+    setErr(null);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, admin }),
+        body: JSON.stringify({ email, password }),
       });
       let data: any = {};
-      try { data = await res.json(); } catch { /* сервер вернул не-JSON */ }
+      try { data = await res.json(); } catch { /* server returned non-JSON */ }
       if (!res.ok) { setErr(data.error || t(locale, 'common_error')); return; }
       router.push(data.role === 'ADMIN' ? '/admin' : '/test');
       router.refresh();
@@ -46,23 +46,6 @@ export default function LoginPage() {
         <h1 className="text-xl font-bold text-lume-navy">{t(locale, 'auth_login_title')}</h1>
         <p className="mt-1 text-sm text-gray-500">{t(locale, 'app_subtitle')}</p>
 
-        <div className="mt-4 inline-flex rounded-full border border-gray-200 p-0.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setAdmin(false)}
-            className={`px-3 py-1 rounded-full ${!admin ? 'bg-lume-navy text-white' : 'text-gray-600'}`}
-          >
-            {t(locale, 'nav_login')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setAdmin(true)}
-            className={`px-3 py-1 rounded-full ${admin ? 'bg-lume-navy text-white' : 'text-gray-600'}`}
-          >
-            {t(locale, 'auth_admin_login')}
-          </button>
-        </div>
-
         <form onSubmit={submit} className="mt-4 space-y-3">
           <div>
             <label className="label">{t(locale, 'auth_email')}</label>
@@ -78,12 +61,10 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {!admin && (
-          <p className="mt-4 text-sm text-gray-500">
-            {t(locale, 'auth_no_account')}{' '}
-            <Link className="text-lume-blue font-medium" href="/register">{t(locale, 'auth_register_btn')}</Link>
-          </p>
-        )}
+        <p className="mt-4 text-sm text-gray-500">
+          {t(locale, 'auth_no_account')}{' '}
+          <Link className="text-lume-blue font-medium" href="/register">{t(locale, 'auth_register_btn')}</Link>
+        </p>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ export default async function TestPage() {
 
   if (attempt?.finishedAt) {
     return (
-      <div className="mx-auto max-w-xl">
+      <div className="mx-auto max-w-xl space-y-4">
         <div className="card p-6 text-center">
           <h1 className="text-2xl font-bold text-lume-navy">{t(locale, 'test_finished_title')}</h1>
           <p className="mt-2 text-gray-500">{t(locale, 'test_already_done')}</p>
@@ -36,7 +36,12 @@ export default async function TestPage() {
           <div className="mt-3 text-xs text-gray-400">
             {attempt.correctCount}/{attempt.totalCount}
           </div>
-          <Link href="/" className="btn-secondary mt-6 inline-flex">{t(locale, 'test_back_home')}</Link>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/lessons" className="btn-primary">
+              {locale === 'uz' ? 'Darslar' : 'Уроки'} →
+            </Link>
+            <Link href="/" className="btn-secondary">{t(locale, 'test_back_home')}</Link>
+          </div>
         </div>
       </div>
     );
@@ -44,7 +49,24 @@ export default async function TestPage() {
 
   if (!attempt) {
     return (
-      <div className="mx-auto max-w-xl">
+      <div className="mx-auto max-w-xl space-y-4">
+        {/* Lessons button */}
+        <div className="card p-4 bg-lume-purple/5 border-lume-purple/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-lume-navy">
+                {locale === 'uz' ? 'Darslarni ko‘ring' : 'Посмотрите уроки'}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {locale === 'uz' ? 'Testdan oldin tizimni o‘rganing' : 'Изучите систему перед тестом'}
+              </p>
+            </div>
+            <Link href="/lessons" className="btn-primary">
+              {locale === 'uz' ? 'Darslar' : 'Уроки'} →
+            </Link>
+          </div>
+        </div>
+
         <div className="card p-6">
           <h1 className="text-2xl font-bold text-lume-navy">{t(locale, 'test_intro_title')}</h1>
           <p className="mt-2 text-sm text-gray-600 leading-relaxed">{t(locale, 'test_intro_lead')}</p>

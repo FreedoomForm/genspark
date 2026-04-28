@@ -8,7 +8,6 @@ export const runtime = 'nodejs';
 const Body = z.object({
   email: z.string().email(),
   password: z.string().min(1),
-  admin: z.boolean().optional().default(false),
 });
 
 export async function POST(req: NextRequest) {
@@ -19,20 +18,19 @@ export async function POST(req: NextRequest) {
 
     const email = parsed.email.toLowerCase().trim();
 
-    if (parsed.admin) {
-      const admin = getAdminCredentials();
-      if (email === admin.email.toLowerCase() && parsed.password === admin.password) {
-        await createSession({
-          sub: 'admin',
-          email: admin.email,
-          name: 'Administrator',
-          role: 'ADMIN',
-        });
-        return NextResponse.json({ ok: true, role: 'ADMIN' });
-      }
-      return NextResponse.json({ error: 'Неверный e-mail или пароль / E-mail yoki parol noto‘g‘ri' }, { status: 401 });
+    // First check if this is admin login
+    const admin = getAdminCredentials();
+    if (email === admin.email.toLowerCase() && parsed.password === admin.password) {
+      await createSession({
+        sub: 'admin',
+        email: admin.email,
+        name: 'Administrator',
+        role: 'ADMIN',
+      });
+      return NextResponse.json({ ok: true, role: 'ADMIN' });
     }
 
+    // Then check regular user in database
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return NextResponse.json({ error: 'Неверный e-mail или пароль / E-mail yoki parol noto‘g‘ri' }, { status: 401 });

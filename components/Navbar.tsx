@@ -31,18 +31,12 @@ export default function Navbar({ locale, session }: { locale: Locale; session: S
 
         <nav className="flex items-center gap-2 text-sm">
           {session?.role === 'USER' && (
-            <Link href="/test" className="hidden sm:inline-block px-3 py-1.5 rounded-md hover:bg-gray-100 text-gray-700">
-              {t(locale, 'nav_test')}
-            </Link>
-          )}
-
-          {!session && (
             <>
-              <Link href="/login" className="px-3 py-1.5 rounded-md hover:bg-gray-100 text-gray-700">
-                {t(locale, 'nav_login')}
+              <Link href="/lessons" className="hidden sm:inline-block px-3 py-1.5 rounded-md hover:bg-gray-100 text-gray-700">
+                {locale === 'uz' ? 'Darslar' : 'Уроки'}
               </Link>
-              <Link href="/register" className="btn-primary">
-                {t(locale, 'nav_register')}
+              <Link href="/test" className="hidden sm:inline-block px-3 py-1.5 rounded-md hover:bg-gray-100 text-gray-700">
+                {t(locale, 'nav_test')}
               </Link>
             </>
           )}
