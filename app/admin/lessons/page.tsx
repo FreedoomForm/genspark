@@ -1,16 +1,14 @@
-import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { getLocale } from '@/lib/i18n-server';
 import AllLessonsView from '@/components/AllLessonsView';
-import { Locale } from '@/lib/i18n';
 
-export default async function AdminLessonsPage() {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/login');
-  }
+export const dynamic = 'force-dynamic';
 
-  const locale = 'ru' as Locale; // Default locale, could be from cookie/header
-
+export default async function LessonsPage() {
+  const session = await getSession();
+  if (!session) redirect('/login');
+  if (session.role !== 'ADMIN') redirect('/test');
+  const locale = getLocale();
   return <AllLessonsView locale={locale} />;
 }
