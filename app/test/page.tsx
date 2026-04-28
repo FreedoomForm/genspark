@@ -37,8 +37,11 @@ export default async function TestPage() {
             {attempt.correctCount}/{attempt.totalCount}
           </div>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/lessons" className="btn-primary">
-              {locale === 'uz' ? 'Darslar' : 'Уроки'} →
+            <Link 
+              href="/lessons" 
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-lume-navy text-white px-6 py-3 font-semibold hover:bg-lume-blue transition"
+            >
+              📚 {locale === 'uz' ? 'Darslar' : 'Уроки'} →
             </Link>
             <Link href="/" className="btn-secondary">{t(locale, 'test_back_home')}</Link>
           </div>
@@ -51,20 +54,19 @@ export default async function TestPage() {
     return (
       <div className="mx-auto max-w-xl space-y-4">
         {/* Lessons button */}
-        <div className="card p-4 bg-lume-purple/5 border-lume-purple/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lume-navy">
-                {locale === 'uz' ? 'Darslarni ko‘ring' : 'Посмотрите уроки'}
-              </h3>
-              <p className="text-sm text-gray-500">
-                {locale === 'uz' ? 'Testdan oldin tizimni o‘rganing' : 'Изучите систему перед тестом'}
-              </p>
-            </div>
-            <Link href="/lessons" className="btn-primary">
-              {locale === 'uz' ? 'Darslar' : 'Уроки'} →
-            </Link>
-          </div>
+        <div className="card p-6 text-center bg-gradient-to-br from-lume-navy to-lume-blue text-white">
+          <h3 className="text-lg font-bold mb-2">
+            {locale === 'uz' ? '📚 Darslarni ko‘ring' : '📚 Посмотрите уроки'}
+          </h3>
+          <p className="text-sm text-white/80 mb-4">
+            {locale === 'uz' ? 'Testdan oldin tizimni o‘rganing' : 'Изучите систему перед тестом'}
+          </p>
+          <Link 
+            href="/lessons" 
+            className="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-white text-lume-navy px-6 py-3 font-semibold hover:bg-gray-100 transition"
+          >
+            {locale === 'uz' ? 'Darslar' : 'Уроки'} →
+          </Link>
         </div>
 
         <div className="card p-6">
