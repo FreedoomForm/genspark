@@ -65,9 +65,14 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-lume-navy">{t(locale, 'admin_title')}</h1>
-        <Link href="/admin/questions" className="btn-primary text-sm">
-          {t(locale, 'admin_see_all_tests')}
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/lessons" className="btn-secondary text-sm">
+            {locale === 'uz' ? 'Barcha darslar' : 'Все уроки'}
+          </Link>
+          <Link href="/admin/questions" className="btn-primary text-sm">
+            {t(locale, 'admin_see_all_tests')}
+          </Link>
+        </div>
       </div>
 
       {/* KPIs */}

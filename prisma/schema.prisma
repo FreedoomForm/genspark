@@ -67,3 +67,22 @@ model Question {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Lesson {
+  id              Int      @id @default(autoincrement())
+  order           Int      @default(0) // Position in the list (for drag-and-drop)
+  category        String   // warehouse, reference, finance, reports, settings, cabinet
+  screenshot      String?  // Path to screenshot
+  ruName          String   // Lesson name in Russian
+  uzName          String   // Lesson name in Uzbek
+  ruDescription   String?  // Description in Russian
+  uzDescription   String?  // Description in Uzbek
+  ruFunctionality String? // What this button/feature does (Russian)
+  uzFunctionality String? // What this button/feature does (Uzbek)
+  uiLocation      String? // Where in the UI this is located
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([order])
+}
