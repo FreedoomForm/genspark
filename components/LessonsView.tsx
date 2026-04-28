@@ -245,7 +245,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                 idx === currentIndex
                   ? 'bg-lume-navy text-white shadow-md scale-110'
                   : lesson.viewed
-                  ? 'bg-lume-purple text-white hover:bg-lume-blue'
+                  ? 'bg-white text-lume-navy border-2 border-lume-navy hover:bg-lume-navy hover:text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
