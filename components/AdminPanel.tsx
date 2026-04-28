@@ -16,11 +16,13 @@ type UserRow = {
   email: string;
   createdAt: string;
   attempt: Attempt | null;
+  lessonsViewed: number;
 };
 type Resp = {
   totalUsers: number;
   totalAttempts: number;
   avgScore: number;
+  totalLessons: number;
   users: UserRow[];
 };
 
@@ -76,7 +78,7 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
       </div>
 
       {/* KPIs */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-4">
         <div className="card p-4">
           <div className="text-xs text-gray-500">{t(locale, 'admin_total_users')}</div>
           <div className="mt-1 text-3xl font-bold text-lume-navy">{data?.totalUsers ?? '—'}</div>
@@ -88,6 +90,10 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
         <div className="card p-4">
           <div className="text-xs text-gray-500">{t(locale, 'admin_avg_score')}</div>
           <div className="mt-1 text-3xl font-bold text-lume-navy">{data ? `${data.avgScore}%` : '—'}</div>
+        </div>
+        <div className="card p-4">
+          <div className="text-xs text-gray-500">{locale === 'uz' ? 'Jami darslar' : 'Всего уроков'}</div>
+          <div className="mt-1 text-3xl font-bold text-lume-navy">{data?.totalLessons ?? '—'}</div>
         </div>
       </div>
 
@@ -110,6 +116,7 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
                 <th className="px-4 py-3">{t(locale, 'admin_th_name')}</th>
                 <th className="px-4 py-3">{t(locale, 'admin_th_email')}</th>
                 <th className="px-4 py-3">{t(locale, 'admin_th_score')}</th>
+                <th className="px-4 py-3">{locale === 'uz' ? 'Darslar' : 'Уроки'}</th>
                 <th className="px-4 py-3">{t(locale, 'admin_th_status')}</th>
                 <th className="px-4 py-3">{t(locale, 'admin_th_date')}</th>
               </tr>
@@ -117,14 +124,14 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
             <tbody className="divide-y divide-gray-100">
               {loading && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-400">
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">
                     {t(locale, 'common_loading')}
                   </td>
                 </tr>
               )}
               {!loading && sorted.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-400">
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-400">
                     {t(locale, 'admin_no_users')}
                   </td>
                 </tr>
@@ -138,6 +145,8 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
                     ? 'done'
                     : 'in_progress';
                   const pct = a ? Math.round((a.correctCount / Math.max(1, a.totalCount)) * 100) : null;
+                  const totalLessons = data?.totalLessons || 200;
+                  const lessonPct = Math.round((u.lessonsViewed / totalLessons) * 100);
                   return (
                     <tr key={u.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-lume-navy">{u.name}</td>
@@ -153,6 +162,12 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
                         ) : (
                           <span className="text-gray-400">—</span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="inline-flex items-baseline gap-2">
+                          <span className="font-bold text-lume-purple">{u.lessonsViewed}/{totalLessons}</span>
+                          <span className="text-xs text-gray-400">({lessonPct}%)</span>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         {status === 'done' && (

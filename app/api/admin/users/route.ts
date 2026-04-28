@@ -25,10 +25,18 @@ export async function GET(req: NextRequest) {
         }
       : { role: 'USER' as const };
 
+    // Get total lessons count
+    const totalLessons = await prisma.lesson.count();
+
     const users = await prisma.user.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      include: { attempt: true },
+      include: {
+        attempt: true,
+        _count: {
+          select: { lessonProgress: true },
+        },
+      },
       take: 200,
     });
 
@@ -50,6 +58,7 @@ export async function GET(req: NextRequest) {
       totalUsers,
       totalAttempts,
       avgScore,
+      totalLessons,
       users: users.map((u) => ({
         id: u.id,
         name: u.name,
@@ -64,6 +73,7 @@ export async function GET(req: NextRequest) {
               finishedAt: u.attempt.finishedAt,
             }
           : null,
+        lessonsViewed: u._count.lessonProgress,
       })),
     });
   } catch (e: any) {

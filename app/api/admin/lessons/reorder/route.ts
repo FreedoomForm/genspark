@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { lessonIds } = body as { lessonIds: number[] };
+    const { lessonIds } = body as { lessonIds: string[] };
 
     if (!Array.isArray(lessonIds) || lessonIds.length === 0) {
       return NextResponse.json({ error: 'Invalid lesson IDs' }, { status: 400 });

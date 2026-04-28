@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Locale, t } from '@/lib/i18n';
 
 type Lesson = {
-  id: number;
+  id: string;
   order: number;
   category: string;
   screenshot: string | null;
@@ -35,8 +35,8 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [saving, setSaving] = useState(false);
-  const [draggedId, setDraggedId] = useState<number | null>(null);
-  const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -69,11 +69,11 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
   });
 
   // Drag and drop handlers
-  function handleDragStart(id: number) {
+  function handleDragStart(id: string) {
     setDraggedId(id);
   }
 
-  function handleDragOver(e: React.DragEvent, id: number) {
+  function handleDragOver(e: React.DragEvent, id: string) {
     e.preventDefault();
     if (draggedId === null || draggedId === id) return;
     setDragOverId(id);
@@ -83,7 +83,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
     setDragOverId(null);
   }
 
-  async function handleDrop(e: React.DragEvent, targetId: number) {
+  async function handleDrop(e: React.DragEvent, targetId: string) {
     e.preventDefault();
     if (draggedId === null || draggedId === targetId) {
       setDraggedId(null);
@@ -160,7 +160,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
     }
   }
 
-  async function handleDeleteLesson(id: number) {
+  async function handleDeleteLesson(id: string) {
     if (!confirm(locale === 'uz' ? "Darsni o'chirishni xohlaysizmi?" : 'Вы уверены, что хотите удалить урок?')) return;
     try {
       const res = await fetch(`/api/admin/lessons/${id}`, { method: 'DELETE' });

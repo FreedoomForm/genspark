@@ -14,11 +14,6 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const lessonId = parseInt(id, 10);
-
-    if (isNaN(lessonId)) {
-      return NextResponse.json({ error: 'Invalid lesson ID' }, { status: 400 });
-    }
 
     const body = await request.json();
     const {
@@ -35,7 +30,7 @@ export async function PUT(
     } = body;
 
     const lesson = await prisma.lesson.update({
-      where: { id: lessonId },
+      where: { id },
       data: {
         category,
         screenshot,
@@ -69,14 +64,9 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const lessonId = parseInt(id, 10);
-
-    if (isNaN(lessonId)) {
-      return NextResponse.json({ error: 'Invalid lesson ID' }, { status: 400 });
-    }
 
     await prisma.lesson.delete({
-      where: { id: lessonId },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });

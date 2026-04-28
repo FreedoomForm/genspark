@@ -9,13 +9,14 @@ datasource db {
 }
 
 model User {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  name        String
-  password    String
-  role        Role      @default(USER)
-  createdAt   DateTime  @default(now())
-  attempt     Attempt?
+  id             String           @id @default(cuid())
+  email          String           @unique
+  name           String
+  password       String
+  role           Role             @default(USER)
+  createdAt      DateTime         @default(now())
+  attempt        Attempt?
+  lessonProgress LessonProgress[]
 }
 
 enum Role {
@@ -69,20 +70,36 @@ model Question {
 }
 
 model Lesson {
-  id              Int      @id @default(autoincrement())
-  order           Int      @default(0) // Position in the list (for drag-and-drop)
-  category        String   // warehouse, reference, finance, reports, settings, cabinet
-  screenshot      String?  // Path to screenshot
-  ruName          String   // Lesson name in Russian
-  uzName          String   // Lesson name in Uzbek
-  ruDescription   String?  // Description in Russian
-  uzDescription   String?  // Description in Uzbek
-  ruFunctionality String? // What this button/feature does (Russian)
-  uzFunctionality String? // What this button/feature does (Uzbek)
-  uiLocation      String? // Where in the UI this is located
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id              String          @id @default(cuid())
+  order           Int             @default(0) // Position in the list (for drag-and-drop)
+  category        String          // warehouse, reference, finance, reports, settings, cabinet
+  screenshot      String?         // Path to screenshot
+  ruName          String          // Lesson name in Russian
+  uzName          String          // Lesson name in Uzbek
+  ruDescription   String?         // Description in Russian
+  uzDescription   String?         // Description in Uzbek
+  ruFunctionality String?         // What this button/feature does (Russian)
+  uzFunctionality String?         // What this button/feature does (Uzbek)
+  uiLocation      String?         // Where in the UI this is located
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  progress        LessonProgress[]
 
   @@index([category])
   @@index([order])
+}
+
+// Track which lessons each user has viewed/completed
+model LessonProgress {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonId   String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  viewedAt   DateTime @default(now())
+  completed  Boolean  @default(false)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
 }
