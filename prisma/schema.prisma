@@ -80,6 +80,12 @@ model Lesson {
   uzDescription   String?         // Description in Uzbek
   ruFunctionality String?         // What this button/feature does (Russian)
   uzFunctionality String?         // What this button/feature does (Uzbek)
+  ruSteps         String?         // Step-by-step instructions (Russian)
+  uzSteps         String?         // Step-by-step instructions (Uzbek)
+  ruTips          String?         // Tips and best practices (Russian)
+  uzTips          String?         // Tips and best practices (Uzbek)
+  ruUseCase       String?         // When to use this feature (Russian)
+  uzUseCase       String?         // When to use this feature (Uzbek)
   uiLocation      String?         // Where in the UI this is located
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt

@@ -14,6 +14,12 @@ type Lesson = {
   uzDescription: string | null;
   ruFunctionality: string | null;
   uzFunctionality: string | null;
+  ruSteps: string | null;
+  uzSteps: string | null;
+  ruTips: string | null;
+  uzTips: string | null;
+  ruUseCase: string | null;
+  uzUseCase: string | null;
   uiLocation: string | null;
   viewed: boolean;
   completed: boolean;
@@ -114,7 +120,20 @@ export default function LessonsView({ locale }: { locale: Locale }) {
   const name = locale === 'uz' ? currentLesson.uzName : currentLesson.ruName;
   const description = locale === 'uz' ? currentLesson.uzDescription : currentLesson.ruDescription;
   const functionality = locale === 'uz' ? currentLesson.uzFunctionality : currentLesson.ruFunctionality;
+  const steps = locale === 'uz' ? currentLesson.uzSteps : currentLesson.ruSteps;
+  const tips = locale === 'uz' ? currentLesson.uzTips : currentLesson.ruTips;
+  const useCase = locale === 'uz' ? currentLesson.uzUseCase : currentLesson.ruUseCase;
   const catLabel = categoryLabels[currentLesson.category]?.[locale] || currentLesson.category;
+
+  // Parse steps as array if it's JSON
+  let stepsArray: string[] = [];
+  if (steps) {
+    try {
+      stepsArray = JSON.parse(steps);
+    } catch {
+      stepsArray = steps.split('\n').filter(s => s.trim());
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
@@ -190,18 +209,67 @@ export default function LessonsView({ locale }: { locale: Locale }) {
           )}
         </div>
 
-        {/* Description */}
+        {/* Description Section */}
         {description && (
-          <p className="text-gray-600 mb-4">{description}</p>
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-lume-navy text-white flex items-center justify-center text-xs">1</span>
+              {locale === 'uz' ? 'Tavsif' : 'Описание'}
+            </h3>
+            <p className="text-gray-600 leading-relaxed">{description}</p>
+          </div>
         )}
 
-        {/* Functionality */}
+        {/* Functionality Section */}
         {functionality && (
-          <div className="bg-blue-50 p-4 rounded-lg mb-4">
-            <p className="text-xs font-medium text-blue-600 mb-1">
-              {locale === 'uz' ? 'Funksionallik:' : 'Функциональность:'}
-            </p>
-            <p className="text-sm text-blue-800">{functionality}</p>
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <h3 className="text-sm font-bold text-blue-700 mb-2 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs">2</span>
+              {locale === 'uz' ? 'Funksionallik' : 'Функциональность'}
+            </h3>
+            <p className="text-blue-800 leading-relaxed">{functionality}</p>
+          </div>
+        )}
+
+        {/* Steps Section */}
+        {stepsArray.length > 0 && (
+          <div className="mb-4 p-4 bg-green-50 rounded-lg">
+            <h3 className="text-sm font-bold text-green-700 mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs">3</span>
+              {locale === 'uz' ? 'Bosqichma-bosqich ko\'rsatmalar' : 'Пошаговая инструкция'}
+            </h3>
+            <ol className="space-y-2">
+              {stepsArray.map((step, idx) => (
+                <li key={idx} className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold">
+                    {idx + 1}
+                  </span>
+                  <span className="text-green-800 leading-relaxed">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
+        {/* Use Case Section */}
+        {useCase && (
+          <div className="mb-4 p-4 bg-purple-50 rounded-lg">
+            <h3 className="text-sm font-bold text-purple-700 mb-2 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs">4</span>
+              {locale === 'uz' ? 'Qachon foydalaniladi' : 'Когда используется'}
+            </h3>
+            <p className="text-purple-800 leading-relaxed">{useCase}</p>
+          </div>
+        )}
+
+        {/* Tips Section */}
+        {tips && (
+          <div className="mb-4 p-4 bg-amber-50 rounded-lg">
+            <h3 className="text-sm font-bold text-amber-700 mb-2 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs">💡</span>
+              {locale === 'uz' ? 'Maslahatlar va tavsiyalar' : 'Советы и рекомендации'}
+            </h3>
+            <p className="text-amber-800 leading-relaxed">{tips}</p>
           </div>
         )}
 
