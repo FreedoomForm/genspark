@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdmin } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 // GET all lessons
 export async function GET() {
   try {
-    const user = await requireAdmin();
-    if (!user) {
+    const session = await getSession();
+    if (!session || session.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -24,8 +24,8 @@ export async function GET() {
 // POST create new lesson
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAdmin();
-    if (!user) {
+    const session = await getSession();
+    if (!session || session.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
