@@ -352,29 +352,42 @@ export default function LessonsView({ locale }: { locale: Locale }) {
         {/* Name */}
         <h2 className="text-xl font-bold text-lume-navy mb-3">{name}</h2>
 
-        {/* Video player - shown before screenshot */}
-        {videoId && (
-          <YouTubePlayer videoId={videoId} title={name} />
-        )}
-
-        {/* Screenshot */}
-        <div className="mb-4">
-          {currentLesson.screenshot ? (
-            <img
-              src={`/${currentLesson.screenshot}`}
-              alt={name}
-              className="w-full rounded-lg border border-gray-200"
-            />
-          ) : (
-            <div className="w-full h-48 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center">
-              <div className="text-center text-gray-400">
-                <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span className="text-sm">{locale === 'uz' ? 'Skrenshot yo‘q' : 'Нет скриншота'}</span>
+        {/* Video and Screenshot side by side */}
+        <div className="mb-4 flex flex-col md:flex-row gap-4">
+          {/* Video player */}
+          {videoId && (
+            <div className="md:w-1/2">
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  title={name}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
               </div>
             </div>
           )}
+          
+          {/* Screenshot */}
+          <div className={videoId ? 'md:w-1/2' : 'w-full'}>
+            {currentLesson.screenshot ? (
+              <img
+                src={`/${currentLesson.screenshot}`}
+                alt={name}
+                className="w-full rounded-lg border border-gray-200"
+              />
+            ) : (
+              <div className="w-full h-48 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center">
+                <div className="text-center text-gray-400">
+                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm">{locale === 'uz' ? 'Skrenshot yo‘q' : 'Нет скриншота'}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Description Section */}

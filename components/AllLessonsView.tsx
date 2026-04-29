@@ -326,21 +326,34 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                     {/* Name */}
                     <h3 className="text-lg font-semibold text-lume-navy mb-2">{name}</h3>
 
-                    {/* Video player */}
-                    {videoId && (
-                      <YouTubePlayer videoId={videoId} title={name} />
-                    )}
-
-                    {/* Screenshot */}
-                    {lesson.screenshot && (
-                      <div className="mb-3">
-                        <img
-                          src={`/${lesson.screenshot}`}
-                          alt={name}
-                          className="max-w-full h-auto rounded-lg border border-gray-200 max-h-48 object-cover"
-                        />
-                      </div>
-                    )}
+                    {/* Video and Screenshot side by side */}
+                    <div className="mb-3 flex flex-col md:flex-row gap-3">
+                      {/* Video player */}
+                      {videoId && (
+                        <div className="md:w-1/2">
+                          <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+                            <iframe
+                              src={`https://www.youtube.com/embed/${videoId}`}
+                              title={name}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              className="absolute inset-0 w-full h-full"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Screenshot */}
+                      {lesson.screenshot && (
+                        <div className={videoId ? 'md:w-1/2' : 'w-full'}>
+                          <img
+                            src={`/${lesson.screenshot}`}
+                            alt={name}
+                            className="w-full h-auto rounded-lg border border-gray-200 max-h-48 object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     {/* Description */}
                     {description && (
