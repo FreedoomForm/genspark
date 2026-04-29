@@ -512,29 +512,31 @@ export default function LessonsView({ locale }: { locale: Locale }) {
         <div className="text-xs text-gray-500 mb-2 text-center">
           {locale === 'uz' ? 'Darslarga o\'tish:' : 'Перейти к уроку:'}
         </div>
-        <div className="flex justify-center gap-1 flex-wrap">
-          {filteredLessons.map((lesson, idx) => {
-            const originalIdx = lessons.findIndex(l => l.id === lesson.id);
-            return (
-              <button
-                key={lesson.id}
-                onClick={() => {
-                  setCurrentIndex(idx);
-                  markLessonViewed(filteredLessons[idx]);
-                }}
-                title={locale === 'uz' ? lesson.uzName : lesson.ruName}
-                className={`w-8 h-8 rounded-full text-xs font-semibold transition-all ${
-                  idx === currentIndex
-                    ? 'bg-gray-700 text-white shadow scale-110'
-                    : lesson.viewed
-                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
-              >
-                {originalIdx + 1}
-              </button>
-            );
-          })}
+        <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full px-3 py-2 overflow-x-auto">
+          <div className="flex justify-center gap-1" style={{ minWidth: 'max-content' }}>
+            {filteredLessons.map((lesson, idx) => {
+              const originalIdx = lessons.findIndex(l => l.id === lesson.id);
+              return (
+                <button
+                  key={lesson.id}
+                  onClick={() => {
+                    setCurrentIndex(idx);
+                    markLessonViewed(filteredLessons[idx]);
+                  }}
+                  title={locale === 'uz' ? lesson.uzName : lesson.ruName}
+                  className={`flex-shrink-0 w-8 h-8 rounded-full text-xs font-semibold transition-all ${
+                    idx === currentIndex
+                      ? 'bg-gray-700 text-white shadow scale-110'
+                      : lesson.viewed
+                      ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                >
+                  {originalIdx + 1}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
