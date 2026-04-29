@@ -537,7 +537,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
             {/* Close button */}
             <button
               onClick={() => setLightbox(null)}
-              className="absolute -top-5 -right-5 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all"
+              className="absolute top-3 right-3 z-10 text-gray-400 hover:text-gray-700 transition-all"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
