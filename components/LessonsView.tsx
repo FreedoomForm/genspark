@@ -512,7 +512,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
         <div className="text-xs text-gray-500 mb-2 text-center">
           {locale === 'uz' ? "Darslarga o'tish:" : 'Перейти к уроку:'}
         </div>
-        <div className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm rounded-full px-3 py-2 overflow-x-auto">
+        <div className="toggle-btn overflow-x-auto">
           <div className="flex justify-center gap-2" style={{ minWidth: 'max-content' }}>
             {filteredLessons.map((lesson, idx) => {
               const originalIdx = lessons.findIndex(l => l.id === lesson.id);
@@ -524,13 +524,13 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                     markLessonViewed(filteredLessons[idx]);
                   }}
                   title={locale === 'uz' ? lesson.uzName : lesson.ruName}
-                  className={`flex-shrink-0 w-9 h-9 rounded-full text-xs font-semibold transition-all shadow-sm border border-gray-200 ${
+                  className={
                     idx === currentIndex
-                      ? 'bg-white/90 backdrop-blur-sm text-gray-700 scale-110 shadow hover:bg-gray-100'
+                      ? 'number-btn-active'
                       : lesson.viewed
-                      ? 'bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-gray-100 hover:shadow'
-                      : 'bg-white/90 backdrop-blur-sm text-gray-400 hover:bg-gray-100 hover:text-gray-600 hover:shadow'
-                  }`}
+                      ? 'number-btn-viewed'
+                      : 'number-btn-default'
+                  }
                 >
                   {originalIdx + 1}
                 </button>
