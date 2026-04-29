@@ -63,6 +63,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<LightboxContent>(null);
+  const [zoomLevel, setZoomLevel] = useState(100);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -77,6 +78,19 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Reset zoom when lightbox opens
+  useEffect(() => {
+    if (lightbox) setZoomLevel(100);
+  }, [lightbox]);
+
+  function zoomIn() {
+    setZoomLevel(prev => Math.min(prev + 25, 300));
+  }
+
+  function zoomOut() {
+    setZoomLevel(prev => Math.max(prev - 25, 50));
+  }
 
   async function fetchLessons() {
     setLoading(true);
@@ -648,11 +662,52 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                   className="absolute inset-0 w-full h-full"
                 />
               ) : (
-                <img
-                  src={`/${lightbox.src}`}
-                  alt={lightbox.title || 'Image'}
-                  className="absolute inset-0 w-full h-full object-contain bg-gray-100"
-                />
+                <>
+                  {/* Zoom controls */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-1.5">
+                    <button
+                      onClick={zoomOut}
+                      disabled={zoomLevel <= 50}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <span className="text-sm font-semibold text-gray-700 min-w-[3rem] text-center">{zoomLevel}%</span>
+                    <button
+                      onClick={zoomIn}
+                      disabled={zoomLevel >= 300}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  {/* Scrollable image container */}
+                  <div className="absolute inset-0 overflow-auto bg-gray-100">
+                    <div 
+                      className="min-w-full min-h-full flex items-center justify-center"
+                      style={{
+                        minWidth: `${zoomLevel}%`,
+                        minHeight: `${zoomLevel}%`
+                      }}
+                    >
+                      <img
+                        src={`/${lightbox.src}`}
+                        alt={lightbox.title || 'Image'}
+                        className="max-w-none transition-transform duration-200"
+                        style={{
+                          width: `${zoomLevel}%`,
+                          height: 'auto'
+                        }}
+                        draggable={false}
+                      />
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
