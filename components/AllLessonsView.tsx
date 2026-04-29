@@ -346,11 +346,13 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                       {/* Screenshot */}
                       {lesson.screenshot && (
                         <div className={videoId ? 'md:w-1/2' : 'w-full'}>
-                          <img
-                            src={`/${lesson.screenshot}`}
-                            alt={name}
-                            className="w-full h-auto rounded-lg border border-gray-200 max-h-48 object-cover"
-                          />
+                          <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+                            <img
+                              src={`/${lesson.screenshot}`}
+                              alt={name}
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
