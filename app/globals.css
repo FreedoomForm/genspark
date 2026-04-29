@@ -64,7 +64,7 @@ body {
   /* ===== BADGES (Лёгкий эффект) ===== */
   .badge { 
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium 
-           transition-all duration-200 drop-shadow-xs hover:drop-shadow-sm; 
+           transition-all duration-200 drop-shadow-sm hover:drop-shadow; 
   }
   .badge-green { @apply badge bg-emerald-50 text-emerald-700; }
   .badge-red { @apply badge bg-red-50 text-red-700; }
