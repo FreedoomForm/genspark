@@ -74,6 +74,7 @@ model Lesson {
   order           Int             @default(0) // Position in the list (for drag-and-drop)
   category        String          // warehouse, reference, finance, reports, settings, cabinet
   screenshot      String?         // Path to screenshot
+  videoUrl        String?         // YouTube video URL for the lesson
   ruName          String          // Lesson name in Russian
   uzName          String          // Lesson name in Uzbek
   ruDescription   String?         // Description in Russian

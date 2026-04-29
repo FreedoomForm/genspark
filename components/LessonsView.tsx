@@ -8,6 +8,7 @@ type Lesson = {
   order: number;
   category: string;
   screenshot: string | null;
+  videoUrl: string | null;
   ruName: string;
   uzName: string;
   ruDescription: string | null;
@@ -36,6 +37,41 @@ const categoryLabels: Record<string, { ru: string; uz: string }> = {
 };
 
 const categories = ['warehouse', 'reference', 'finance', 'reports', 'settings', 'cabinet'];
+
+// Helper function to extract YouTube video ID from URL
+function getYouTubeVideoId(url: string | null): string | null {
+  if (!url) return null;
+  
+  // Handle various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return null;
+}
+
+// YouTube player component
+function YouTubePlayer({ videoId, title }: { videoId: string; title?: string }) {
+  return (
+    <div className="mb-4">
+      <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title={title || 'YouTube video'}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 w-full h-full"
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function LessonsView({ locale }: { locale: Locale }) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -188,6 +224,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
   const tips = locale === 'uz' ? currentLesson.uzTips : currentLesson.ruTips;
   const useCase = locale === 'uz' ? currentLesson.uzUseCase : currentLesson.ruUseCase;
   const catLabel = categoryLabels[currentLesson.category]?.[locale] || currentLesson.category;
+  const videoId = getYouTubeVideoId(currentLesson.videoUrl);
 
   // Parse steps as array if it's JSON
   let stepsArray: string[] = [];
@@ -293,6 +330,14 @@ export default function LessonsView({ locale }: { locale: Locale }) {
               {locale === 'uz' ? "Ko'rilgan" : 'Просмотрено'}
             </span>
           )}
+          {currentLesson.videoUrl && (
+            <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+              </svg>
+              YouTube
+            </span>
+          )}
         </div>
 
         {/* UI Location */}
@@ -306,6 +351,11 @@ export default function LessonsView({ locale }: { locale: Locale }) {
 
         {/* Name */}
         <h2 className="text-xl font-bold text-lume-navy mb-3">{name}</h2>
+
+        {/* Video player - shown before screenshot */}
+        {videoId && (
+          <YouTubePlayer videoId={videoId} title={name} />
+        )}
 
         {/* Screenshot */}
         <div className="mb-4">

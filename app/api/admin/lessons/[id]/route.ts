@@ -19,6 +19,7 @@ export async function PUT(
     const {
       category,
       screenshot,
+      videoUrl,
       ruName,
       uzName,
       ruDescription,
@@ -34,6 +35,7 @@ export async function PUT(
       data: {
         category,
         screenshot,
+        videoUrl,
         ruName,
         uzName,
         ruDescription,

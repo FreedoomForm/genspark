@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
     const {
       category,
       screenshot,
+      videoUrl,
       ruName,
       uzName,
       ruDescription,
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
         order,
         category,
         screenshot,
+        videoUrl,
         ruName,
         uzName,
         ruDescription,
