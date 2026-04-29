@@ -56,7 +56,7 @@ export default function RegisterPage() {
             <label className="label">{t(locale, 'auth_password')}</label>
             <input className="input" type="password" autoComplete="new-password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
-          {err && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 border border-red-100">{err}</div>}
+          {err && <div className="alert-error">{err}</div>}
           <button className="btn-primary w-full" disabled={loading}>
             {loading ? t(locale, 'common_loading') : t(locale, 'auth_register_btn')}
           </button>

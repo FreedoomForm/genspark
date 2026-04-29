@@ -172,11 +172,11 @@ export default function TestRunner({ locale, startMode }: { locale: Locale; star
             <div className="text-xs text-gray-400 mt-1">{state.correct}/{total}</div>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4">
-            <div className="rounded-xl bg-emerald-50 p-4">
+            <div className="stat-box-correct">
               <div className="text-3xl font-bold text-emerald-600">{state.correct}</div>
               <div className="text-xs text-emerald-700">{t(locale, 'test_score_correct')}</div>
             </div>
-            <div className="rounded-xl bg-red-50 p-4">
+            <div className="stat-box-incorrect">
               <div className="text-3xl font-bold text-red-600">{state.incorrect}</div>
               <div className="text-xs text-red-700">{t(locale, 'test_score_incorrect')}</div>
             </div>
@@ -196,15 +196,15 @@ export default function TestRunner({ locale, startMode }: { locale: Locale; star
     <div className="mx-auto max-w-3xl space-y-4">
       {/* Counters */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="card p-3 text-center">
+        <div className="stat-box">
           <div className="text-xs text-gray-500">{t(locale, 'test_correct')}</div>
           <div className="text-2xl font-bold text-emerald-600">{state.correct}</div>
         </div>
-        <div className="card p-3 text-center">
+        <div className="stat-box">
           <div className="text-xs text-gray-500">{t(locale, 'test_incorrect')}</div>
           <div className="text-2xl font-bold text-red-600">{state.incorrect}</div>
         </div>
-        <div className="card p-3 text-center">
+        <div className="stat-box">
           <div className="text-xs text-gray-500">{t(locale, 'test_remaining')}</div>
           <div className="text-2xl font-bold text-lume-navy">{remaining}</div>
         </div>
@@ -242,21 +242,21 @@ export default function TestRunner({ locale, startMode }: { locale: Locale; star
             const isWrong = revealed && isSelected && !revealed.isCorrect && i !== revealed.correctIndex;
             const cls = revealed
               ? isCorrect
-                ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                ? 'question-option question-option-correct'
                 : isWrong
-                ? 'border-red-300 bg-red-50 text-red-800'
-                : 'border-gray-200 bg-white text-gray-600'
+                ? 'question-option question-option-wrong'
+                : 'question-option question-option-default opacity-60'
               : isSelected
-              ? 'border-lume-blue bg-blue-50 text-lume-navy'
-              : 'border-gray-200 bg-white hover:bg-gray-50';
+              ? 'question-option question-option-selected'
+              : 'question-option question-option-default';
             return (
               <button
                 key={i}
                 disabled={!!revealed}
                 onClick={() => setSelected(i)}
-                className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition ${cls}`}
+                className={cls}
               >
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600">
+                <span className="option-letter">
                   {String.fromCharCode(65 + i)}
                 </span>
                 {opt}

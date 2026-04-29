@@ -174,7 +174,7 @@ export default function AdminPanel({ locale }: { locale: Locale }) {
                           <span className="badge-green">{t(locale, 'admin_status_done')}</span>
                         )}
                         {status === 'in_progress' && (
-                          <span className="badge bg-amber-50 text-amber-700">{t(locale, 'admin_status_in_progress')}</span>
+                          <span className="badge-amber">{t(locale, 'admin_status_in_progress')}</span>
                         )}
                         {status === 'not_started' && (
                           <span className="badge-gray">{t(locale, 'admin_status_not_started')}</span>

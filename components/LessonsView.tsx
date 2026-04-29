@@ -335,7 +335,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
       <div className="card p-6">
         {/* Category badge */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="inline-block px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
+          <span className="category-badge">
             {catLabel}
           </span>
           {currentLesson.viewed && (
@@ -344,7 +344,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
             </span>
           )}
           {currentLesson.videoUrl && (
-            <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600 flex items-center gap-1">
+            <span className="youtube-badge">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
               </svg>
@@ -356,7 +356,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
         {/* UI Location */}
         {currentLesson.uiLocation && (
           <div className="mb-3">
-            <span className="inline-block px-3 py-1 text-sm rounded-full bg-lume-purple/10 text-lume-purple">
+            <span className="location-badge">
               📍 {currentLesson.uiLocation}
             </span>
           </div>
@@ -553,9 +553,9 @@ export default function LessonsView({ locale }: { locale: Locale }) {
             {/* Close button */}
             <button
               onClick={() => setLightbox(null)}
-              className="absolute top-3 right-3 z-10 text-gray-500 hover:text-gray-800 transition-all drop-shadow-lg hover:drop-shadow-xl hover:scale-110"
+              className="modal-close"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -580,21 +580,21 @@ export default function LessonsView({ locale }: { locale: Locale }) {
               ) : (
                 <>
                   {/* Zoom controls */}
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-1.5">
+                  <div className="zoom-controls">
                     <button
                       onClick={zoomOut}
                       disabled={zoomLevel <= 50}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      className="zoom-btn"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                       </svg>
                     </button>
-                    <span className="text-sm font-semibold text-gray-700 min-w-[3rem] text-center">{zoomLevel}%</span>
+                    <span className="zoom-indicator">{zoomLevel}%</span>
                     <button
                       onClick={zoomIn}
                       disabled={zoomLevel >= 300}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      className="zoom-btn"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
