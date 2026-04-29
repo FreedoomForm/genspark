@@ -285,7 +285,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
       {/* Filters toggle button */}
       <button
         onClick={() => setShowFilters(!showFilters)}
-        className="w-full card p-3 flex items-center justify-between text-sm hover:bg-gray-50 transition"
+        className="w-full bg-white/90 backdrop-blur-sm border border-gray-200 shadow-sm rounded-full p-3 flex items-center justify-between text-sm hover:bg-gray-100 hover:shadow transition-all"
       >
         <span className="font-medium text-lume-navy">
           {locale === 'uz' ? 'Qidiruv va kategoriyalar' : 'Поиск и категории'}
@@ -523,12 +523,12 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                   markLessonViewed(filteredLessons[idx]);
                 }}
                 title={locale === 'uz' ? lesson.uzName : lesson.ruName}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
+                className={`w-8 h-8 rounded-full text-xs font-semibold transition-all shadow-sm ${
                   idx === currentIndex
-                    ? 'bg-lume-navy text-white shadow-md scale-110'
+                    ? 'bg-white/90 backdrop-blur-sm text-gray-700 border border-gray-200 scale-110 shadow'
                     : lesson.viewed
-                    ? 'bg-white text-lume-navy border-2 border-lume-navy hover:bg-lume-navy hover:text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-white/90 backdrop-blur-sm text-gray-600 border border-gray-200 hover:bg-gray-100 hover:shadow'
+                    : 'bg-white/90 backdrop-blur-sm text-gray-400 border border-gray-200 hover:bg-gray-100 hover:text-gray-600 hover:shadow'
                 }`}
               >
                 {originalIdx + 1}
