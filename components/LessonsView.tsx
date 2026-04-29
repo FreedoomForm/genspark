@@ -27,6 +27,12 @@ type Lesson = {
   viewedAt: string | null;
 };
 
+type LightboxContent = {
+  type: 'video' | 'image';
+  src: string;
+  title?: string;
+} | null;
+
 const categoryLabels: Record<string, { ru: string; uz: string }> = {
   warehouse: { ru: 'Складские операции', uz: 'Ombor operatsiyalari' },
   reference: { ru: 'Справочник', uz: "Ma'lumotnoma" },
@@ -56,23 +62,6 @@ function getYouTubeVideoId(url: string | null): string | null {
   return null;
 }
 
-// YouTube player component
-function YouTubePlayer({ videoId, title }: { videoId: string; title?: string }) {
-  return (
-    <div className="mb-4">
-      <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
-        <iframe
-          src={`https://www.youtube.com/embed/${videoId}`}
-          title={title || 'YouTube video'}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="absolute inset-0 w-full h-full"
-        />
-      </div>
-    </div>
-  );
-}
-
 export default function LessonsView({ locale }: { locale: Locale }) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,9 +69,19 @@ export default function LessonsView({ locale }: { locale: Locale }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
+  const [lightbox, setLightbox] = useState<LightboxContent>(null);
 
   useEffect(() => {
     fetchLessons();
+  }, []);
+
+  // Close lightbox on Escape key
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLightbox(null);
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   async function fetchLessons() {
@@ -356,15 +355,23 @@ export default function LessonsView({ locale }: { locale: Locale }) {
         <div className="mb-4 flex flex-col md:flex-row gap-4">
           {/* Video player */}
           {videoId && (
-            <div className="md:w-1/2">
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+            <div 
+              className="md:w-1/2 cursor-pointer group"
+              onClick={() => setLightbox({ type: 'video', src: videoId, title: name })}
+            >
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 group-hover:ring-2 group-hover:ring-lume-purple transition-all">
                 <iframe
                   src={`https://www.youtube.com/embed/${videoId}`}
                   title={name}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="absolute inset-0 w-full h-full"
+                  className="absolute inset-0 w-full h-full pointer-events-none"
                 />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
+                  <svg className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                  </svg>
+                </div>
               </div>
             </div>
           )}
@@ -372,12 +379,20 @@ export default function LessonsView({ locale }: { locale: Locale }) {
           {/* Screenshot */}
           <div className={videoId ? 'md:w-1/2' : 'w-full'}>
             {currentLesson.screenshot ? (
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+              <div 
+                className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 cursor-pointer group"
+                onClick={() => setLightbox({ type: 'image', src: currentLesson.screenshot!, title: name })}
+              >
                 <img
                   src={`/${currentLesson.screenshot}`}
                   alt={name}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                  <svg className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
+                </div>
               </div>
             ) : (
               <div className="w-full aspect-video rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center">
@@ -508,6 +523,55 @@ export default function LessonsView({ locale }: { locale: Locale }) {
           })}
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      {lightbox && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/70"
+          onClick={() => setLightbox(null)}
+        >
+          <div 
+            className="relative w-full max-w-5xl bg-white rounded-xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setLightbox(null)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            {lightbox.title && (
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-lg font-semibold text-lume-navy truncate">{lightbox.title}</h3>
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="relative w-full aspect-video">
+              {lightbox.type === 'video' ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${lightbox.src}?autoplay=1`}
+                  title={lightbox.title || 'Video'}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
+              ) : (
+                <img
+                  src={`/${lightbox.src}`}
+                  alt={lightbox.title || 'Image'}
+                  className="absolute inset-0 w-full h-full object-contain bg-gray-100"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
