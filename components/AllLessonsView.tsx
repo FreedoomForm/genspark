@@ -467,10 +467,15 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                   />
                   {getYouTubeVideoId(editingLesson.videoUrl) && (
                     <div className="mt-2">
-                      <YouTubePlayer 
-                        videoId={getYouTubeVideoId(editingLesson.videoUrl)!} 
-                        title={locale === 'uz' ? editingLesson.uzName : editingLesson.ruName}
-                      />
+                      <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${getYouTubeVideoId(editingLesson.videoUrl)}`}
+                          title={locale === 'uz' ? editingLesson.uzName : editingLesson.ruName}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="absolute inset-0 w-full h-full"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
