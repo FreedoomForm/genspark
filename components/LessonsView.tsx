@@ -508,11 +508,11 @@ export default function LessonsView({ locale }: { locale: Locale }) {
       </div>
 
       {/* Lesson navigation with numbers */}
-      <div className="card p-4">
+      <div className="p-2">
         <div className="text-xs text-gray-500 mb-2 text-center">
           {locale === 'uz' ? 'Darslarga o\'tish:' : 'Перейти к уроку:'}
         </div>
-        <div className="flex justify-center gap-1 flex-wrap max-h-32 overflow-y-auto">
+        <div className="flex justify-center gap-1 flex-wrap">
           {filteredLessons.map((lesson, idx) => {
             const originalIdx = lessons.findIndex(l => l.id === lesson.id);
             return (
@@ -523,12 +523,12 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                   markLessonViewed(filteredLessons[idx]);
                 }}
                 title={locale === 'uz' ? lesson.uzName : lesson.ruName}
-                className={`w-8 h-8 rounded-full text-xs font-semibold transition-all shadow-sm ${
+                className={`w-8 h-8 rounded-full text-xs font-semibold transition-all ${
                   idx === currentIndex
-                    ? 'bg-white/90 backdrop-blur-sm text-gray-700 border border-gray-200 scale-110 shadow'
+                    ? 'bg-gray-700 text-white shadow scale-110'
                     : lesson.viewed
-                    ? 'bg-white/90 backdrop-blur-sm text-gray-600 border border-gray-200 hover:bg-gray-100 hover:shadow'
-                    : 'bg-white/90 backdrop-blur-sm text-gray-400 border border-gray-200 hover:bg-gray-100 hover:text-gray-600 hover:shadow'
+                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
               >
                 {originalIdx + 1}
