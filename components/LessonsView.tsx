@@ -508,12 +508,12 @@ export default function LessonsView({ locale }: { locale: Locale }) {
       </div>
 
       {/* Lesson navigation with numbers */}
-      <div className="mt-4">
-        <div className="text-xs text-gray-500 mb-2 text-center">
+      <div className="mt-2">
+        <div className="text-[10px] text-gray-400 mb-1 text-center">
           {locale === 'uz' ? "Darslarga o'tish:" : 'Перейти к уроку:'}
         </div>
-        <div className="toggle-btn overflow-x-auto">
-          <div className="flex justify-center gap-2" style={{ minWidth: 'max-content' }}>
+        <div className="overflow-x-auto rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 px-2 py-1.5 drop-shadow-sm">
+          <div className="flex justify-center gap-1.5" style={{ minWidth: 'max-content' }}>
             {filteredLessons.map((lesson, idx) => {
               const originalIdx = lessons.findIndex(l => l.id === lesson.id);
               return (
@@ -526,10 +526,10 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                   title={locale === 'uz' ? lesson.uzName : lesson.ruName}
                   className={
                     idx === currentIndex
-                      ? 'number-btn-active'
+                      ? 'number-btn-active !w-7 !h-7 !text-[10px]'
                       : lesson.viewed
-                      ? 'number-btn-viewed'
-                      : 'number-btn-default'
+                      ? 'number-btn-viewed !w-7 !h-7 !text-[10px]'
+                      : 'number-btn-default !w-7 !h-7 !text-[10px]'
                   }
                 >
                   {originalIdx + 1}
