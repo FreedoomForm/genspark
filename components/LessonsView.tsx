@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Locale, t } from '@/lib/i18n';
+import LessonMediaPlayer from '@/components/LessonMediaPlayer';
 
 type Lesson = {
   id: string;
@@ -43,24 +44,6 @@ const categoryLabels: Record<string, { ru: string; uz: string }> = {
 };
 
 const categories = ['warehouse', 'reference', 'finance', 'reports', 'settings', 'cabinet'];
-
-// Helper function to extract YouTube video ID from URL
-function getYouTubeVideoId(url: string | null): string | null {
-  if (!url) return null;
-  
-  // Handle various YouTube URL formats
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-    /youtube\.com\/shorts\/([^&\n?#]+)/,
-  ];
-  
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
-  }
-  
-  return null;
-}
 
 export default function LessonsView({ locale }: { locale: Locale }) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -237,7 +220,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
   const tips = locale === 'uz' ? currentLesson.uzTips : currentLesson.ruTips;
   const useCase = locale === 'uz' ? currentLesson.uzUseCase : currentLesson.ruUseCase;
   const catLabel = categoryLabels[currentLesson.category]?.[locale] || currentLesson.category;
-  const videoId = getYouTubeVideoId(currentLesson.videoUrl);
+  const hasVideo = Boolean(currentLesson.videoUrl);
 
   // Parse steps as array if it's JSON
   let stepsArray: string[] = [];
@@ -344,11 +327,11 @@ export default function LessonsView({ locale }: { locale: Locale }) {
             </span>
           )}
           {currentLesson.videoUrl && (
-            <span className="youtube-badge">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+            <span className="badge-blue text-xs inline-flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              YouTube
+              {locale === 'uz' ? 'Video' : 'Видео'}
             </span>
           )}
         </div>
@@ -368,22 +351,16 @@ export default function LessonsView({ locale }: { locale: Locale }) {
         {/* Video and Screenshot side by side */}
         <div className="mb-4 flex flex-col md:flex-row gap-4">
           {/* Video player */}
-          {videoId && (
+          {hasVideo && (
             <div 
               className="md:w-1/2 cursor-pointer group"
-              onClick={() => setLightbox({ type: 'video', src: videoId, title: name })}
+              onClick={() => setLightbox({ type: 'video', src: currentLesson.videoUrl!, title: name })}
             >
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 group-hover:ring-2 group-hover:ring-lume-purple transition-all">
-                <iframe
-                  src={`https://www.youtube.com/embed/${videoId}`}
-                  title={name}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                />
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 group-hover:ring-2 group-hover:ring-lume-purple transition-all bg-black">
+                <LessonMediaPlayer videoUrl={currentLesson.videoUrl} locale={locale} title={name} preview />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
                   <svg className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                    <path d="M8 5v14l11-7z"/>
                   </svg>
                 </div>
               </div>
@@ -391,7 +368,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
           )}
           
           {/* Screenshot */}
-          <div className={videoId ? 'md:w-1/2' : 'w-full'}>
+          <div className={hasVideo ? 'md:w-1/2' : 'w-full'}>
             {currentLesson.screenshot ? (
               <div 
                 className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 cursor-pointer group"
@@ -570,12 +547,11 @@ export default function LessonsView({ locale }: { locale: Locale }) {
             {/* Content */}
             <div className="relative w-full aspect-video">
               {lightbox.type === 'video' ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${lightbox.src}?autoplay=1`}
+                <LessonMediaPlayer
+                  videoUrl={lightbox.src}
+                  locale={locale}
                   title={lightbox.title || 'Video'}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
+                  autoplay
                 />
               ) : (
                 <>

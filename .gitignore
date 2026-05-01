@@ -33,3 +33,7 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations
+
+# lesson video pipeline
+/.video-tmp/
+/public/generated-videos/*.mp4

@@ -1,29 +1,33 @@
+import 'dotenv/config';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { PrismaClient } from '@prisma/client';
+import { put } from '@vercel/blob';
 
+const prisma = new PrismaClient();
 const ROOT = process.cwd();
 const OUT_DIR = path.join(ROOT, 'public', 'generated-videos');
 const TMP_DIR = path.join(ROOT, '.video-tmp');
 const FONT_BOLD = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf';
 const FONT_REG = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf';
+const FROM = Number(process.env.FROM || '1');
+const TO = Number(process.env.TO || '200');
+const FORCE_REGENERATE = process.env.FORCE_REGENERATE === '1';
+const LOCALES = (process.env.LOCALES || 'ru,uz').split(',').map((s) => s.trim()).filter(Boolean);
+const BLOB_ENABLED = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+const UPLOAD_ONLY = process.env.UPLOAD_ONLY === '1';
+const EDGE_TTS_BIN = fs.existsSync('/usr/local/bin/edge-tts') ? '/usr/local/bin/edge-tts' : 'edge-tts';
+
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.mkdirSync(TMP_DIR, { recursive: true });
 
-const FROM = Number(process.env.FROM || '1');
-const TO = Number(process.env.TO || '10');
-const LOCALES = (process.env.LOCALES || 'ru,uz').split(',').map(s => s.trim()).filter(Boolean);
-
-function loadLessons() {
-  const src = fs.readFileSync(path.join(ROOT, 'scripts', 'seed-lessons.ts'), 'utf8');
-  const start = src.indexOf('const lessons = [');
-  const end = src.indexOf('];\n\nasync function main()');
-  const arrayLiteral = src.slice(start + 'const lessons = '.length, end + 1);
-  return Function(`return (${arrayLiteral});`)();
-}
-
 function slugify(input) {
-  return String(input || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'lesson';
+  return String(input || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'lesson';
 }
 
 function ffPath(p) {
@@ -31,7 +35,8 @@ function ffPath(p) {
 }
 
 function ffprobeDuration(file) {
-  return Math.max(6, Math.ceil(Number(execFileSync('ffprobe', ['-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1', file], { encoding:'utf8' }).trim() || '6')));
+  const out = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file], { encoding: 'utf8' }).trim();
+  return Math.max(6, Math.ceil(Number(out || '6')));
 }
 
 function categoryFallback(category) {
@@ -46,7 +51,10 @@ function categoryFallback(category) {
 }
 
 function screenshotFor(lesson) {
-  const t = `${lesson.ruName} ${lesson.uzName} ${lesson.ruDescription} ${lesson.ruFunctionality} ${lesson.uiLocation}`.toLowerCase();
+  const screenshot = lesson.screenshot ? path.join(ROOT, 'public', lesson.screenshot) : '';
+  if (screenshot && fs.existsSync(screenshot)) return screenshot;
+
+  const t = `${lesson.ruName || ''} ${lesson.uzName || ''} ${lesson.ruDescription || ''} ${lesson.ruFunctionality || ''} ${lesson.uiLocation || ''}`.toLowerCase();
   const rules = [
     ['баланс balans', 'balance.png'],
     ['товар tovar', 'products.png'],
@@ -58,7 +66,7 @@ function screenshotFor(lesson) {
     ['инвентар inventar', 'inventory.png'],
     ['списани yozib', 'writeoff.png'],
     ['группиров guruh', 'grouping.png'],
-    ['весов og\'irlik', 'weighted_products.png'],
+    ["весов og'irlik", 'weighted_products.png'],
     ['импорт import', 'import_products.png'],
     ['техкарт tex-kart', 'tech_cards.png'],
     ['изготов ishlab chiqar', 'manufacturing_act.png'],
@@ -80,17 +88,21 @@ function screenshotFor(lesson) {
     ['xyz', 'xyz_report.png'],
     ['отчет hisobot report', 'sales_report.png'],
   ];
+
   for (const [needle, file] of rules) {
-    if (needle.split(' ').some(k => k && t.includes(k))) return path.join(ROOT, 'public', 'screenshots', file);
+    if (needle.split(' ').some((k) => k && t.includes(k))) {
+      return path.join(ROOT, 'public', 'screenshots', file);
+    }
   }
+
   return path.join(ROOT, 'public', 'screenshots', categoryFallback(lesson.category));
 }
 
 function narration(lesson, locale) {
   if (locale === 'ru') {
-    return `Урок ${lesson.order}. ${lesson.ruName}. ${lesson.ruDescription}. ${lesson.ruFunctionality}. Расположение в интерфейсе: ${lesson.uiLocation}.`;
+    return `Урок ${lesson.order}. ${lesson.ruName}. ${lesson.ruDescription || ''}. ${lesson.ruFunctionality || ''}. Расположение в интерфейсе: ${lesson.uiLocation || ''}.`;
   }
-  return `${lesson.order}-dars. ${lesson.uzName}. ${lesson.uzDescription}. ${lesson.uzFunctionality}. Interfeysdagi joylashuvi: ${lesson.uiLocation}.`;
+  return `${lesson.order}-dars. ${lesson.uzName}. ${lesson.uzDescription || ''}. ${lesson.uzFunctionality || ''}. Interfeysdagi joylashuvi: ${lesson.uiLocation || ''}.`;
 }
 
 function coords(lesson) {
@@ -111,7 +123,7 @@ function writeText(file, text) {
 function synthesize(text, locale, outFile) {
   const voice = locale === 'ru' ? 'ru-RU-DmitryNeural' : 'uz-UZ-SardorNeural';
   const rate = locale === 'ru' ? '-8%' : '-10%';
-  execFileSync('edge-tts', ['--voice', voice, `--rate=${rate}`, '--text', text, '--write-media', outFile], { stdio: 'ignore' });
+  execFileSync(EDGE_TTS_BIN, ['--voice', voice, `--rate=${rate}`, '--text', text, '--write-media', outFile], { stdio: 'ignore' });
 }
 
 function makeVideo(lesson, locale, imagePath, audioPath, outFile) {
@@ -124,21 +136,97 @@ function makeVideo(lesson, locale, imagePath, audioPath, outFile) {
   writeText(path.join(work, 'title.txt'), title);
   writeText(path.join(work, 'loc.txt'), lesson.uiLocation || '');
 
-  const filter = `[0:v]scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p,drawbox=x=0:y=0:w=iw:h=58:color=black@0.45:t=fill,drawbox=x=0:y=ih-76:w=iw:h=76:color=black@0.45:t=fill,drawtext=fontfile=${ffPath(FONT_BOLD)}:textfile=${ffPath(path.join(work,'title.txt'))}:fontsize=28:fontcolor=white:x=24:y=14,drawtext=fontfile=${ffPath(FONT_REG)}:textfile=${ffPath(path.join(work,'loc.txt'))}:fontsize=18:fontcolor=white:x=24:y=h-48,drawtext=fontfile=${ffPath(FONT_BOLD)}:text='\\u25CF':fontsize=34:fontcolor=yellow:borderw=3:bordercolor=black:x='${xExpr}':y='${yExpr}'[v]`;
+  const filter = `[0:v]scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p,drawbox=x=0:y=0:w=iw:h=58:color=black@0.45:t=fill,drawbox=x=0:y=ih-76:w=iw:h=76:color=black@0.45:t=fill,drawtext=fontfile=${ffPath(FONT_BOLD)}:textfile=${ffPath(path.join(work, 'title.txt'))}:fontsize=28:fontcolor=white:x=24:y=14,drawtext=fontfile=${ffPath(FONT_REG)}:textfile=${ffPath(path.join(work, 'loc.txt'))}:fontsize=18:fontcolor=white:x=24:y=h-48,drawtext=fontfile=${ffPath(FONT_BOLD)}:text='\\u25CF':fontsize=34:fontcolor=yellow:borderw=3:bordercolor=black:x='${xExpr}':y='${yExpr}'[v]`;
 
-  execFileSync('ffmpeg', ['-y','-threads','1','-loop','1','-framerate','24','-t',String(duration),'-i',imagePath,'-i',audioPath,'-filter_complex',filter,'-map','[v]','-map','1:a','-r','24','-c:v','libx264','-preset','ultrafast','-tune','stillimage','-pix_fmt','yuv420p','-c:a','aac','-b:a','96k','-b:v','700k','-shortest',outFile], { stdio: 'ignore' });
+  execFileSync('ffmpeg', [
+    '-y', '-threads', '1', '-loop', '1', '-framerate', '24', '-t', String(duration), '-i', imagePath, '-i', audioPath,
+    '-filter_complex', filter, '-map', '[v]', '-map', '1:a', '-r', '24', '-c:v', 'libx264', '-preset', 'ultrafast',
+    '-tune', 'stillimage', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-b:v', '700k', '-shortest', outFile,
+  ], { stdio: 'ignore' });
 }
 
-const lessons = loadLessons().filter(x => x.order >= FROM && x.order <= TO);
-for (const lesson of lessons) {
-  for (const locale of LOCALES) {
-    const base = `${String(lesson.order).padStart(3,'0')}-${locale}-${locale === 'ru' ? 'lesson' : slugify(lesson.uzName)}`;
-    const audio = path.join(TMP_DIR, `${base}.mp3`);
-    const video = path.join(OUT_DIR, `${base}.mp4`);
-    if (fs.existsSync(video) && fs.statSync(video).size > 100000) continue;
-    const shot = screenshotFor(lesson);
-    synthesize(narration(lesson, locale), locale, audio);
-    makeVideo(lesson, locale, shot, audio, video);
-    console.log(`done ${base}`);
+function parseVideoMap(raw) {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return { ...parsed };
+  } catch {}
+  return {};
+}
+
+async function uploadVideo(filePath, order, locale, lesson) {
+  const fileName = path.basename(filePath);
+  if (!BLOB_ENABLED) {
+    return `/generated-videos/${fileName}`;
+  }
+
+  const blobPath = `lesson-videos/${String(order).padStart(3, '0')}/${locale}/${slugify(locale === 'ru' ? lesson.ruName : lesson.uzName)}.mp4`;
+  const buffer = fs.readFileSync(filePath);
+  const result = await put(blobPath, buffer, {
+    access: 'public',
+    addRandomSuffix: false,
+    contentType: 'video/mp4',
+  });
+  return result.url;
+}
+
+async function main() {
+  const lessons = await prisma.lesson.findMany({
+    where: { order: { gte: FROM, lte: TO } },
+    orderBy: { order: 'asc' },
+  });
+
+  console.log(`Lessons loaded: ${lessons.length}`);
+  if (lessons.length === 0) return;
+
+  for (const lesson of lessons) {
+    let map = parseVideoMap(lesson.videoUrl);
+    if (!map.default && lesson.videoUrl && !lesson.videoUrl.trim().startsWith('{')) {
+      map.default = lesson.videoUrl;
+    }
+
+    for (const locale of LOCALES) {
+      const base = `${String(lesson.order).padStart(3, '0')}-${locale}-${locale === 'ru' ? 'lesson' : slugify(lesson.uzName)}`;
+      const audioPath = path.join(TMP_DIR, `${base}.mp3`);
+      const videoPath = path.join(OUT_DIR, `${base}.mp4`);
+      const alreadyMapped = typeof map[locale] === 'string' && map[locale];
+      const localReady = fs.existsSync(videoPath) && fs.statSync(videoPath).size > 100000;
+
+      console.log(`Lesson ${lesson.order} ${locale}: start`);
+
+      if (!alreadyMapped || FORCE_REGENERATE) {
+        if (!UPLOAD_ONLY && (!localReady || FORCE_REGENERATE)) {
+          const shot = screenshotFor(lesson);
+          if (!fs.existsSync(shot)) {
+            throw new Error(`Screenshot not found for lesson ${lesson.order}: ${shot}`);
+          }
+          synthesize(narration(lesson, locale), locale, audioPath);
+          makeVideo(lesson, locale, shot, audioPath, videoPath);
+        }
+
+        if (!(fs.existsSync(videoPath) && fs.statSync(videoPath).size > 100000)) {
+          throw new Error(`Video not generated for lesson ${lesson.order} ${locale}`);
+        }
+
+        const url = await uploadVideo(videoPath, lesson.order, locale, lesson);
+        map[locale] = url;
+        await prisma.lesson.update({
+          where: { id: lesson.id },
+          data: { videoUrl: JSON.stringify(map) },
+        });
+        console.log(`Lesson ${lesson.order} ${locale}: uploaded`);
+      } else {
+        console.log(`Lesson ${lesson.order} ${locale}: skipped (db already has url)`);
+      }
+    }
   }
 }
+
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
