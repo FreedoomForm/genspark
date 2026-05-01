@@ -1,0 +1,85 @@
+name: Generate Lesson Videos
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'Start from lesson number'
+        required: false
+        default: '1'
+      to:
+        description: 'End at lesson number'
+        required: false
+        default: '200'
+      force_regenerate:
+        description: 'Force regenerate all videos (1=yes)'
+        required: false
+        default: '0'
+      locales:
+        description: 'Locales to generate (comma-separated)'
+        required: false
+        default: 'ru,uz'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  generate-videos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg python3-pip
+          pip3 install edge-tts --break-system-packages
+          sudo ln -sf $(which edge-tts) /usr/local/bin/edge-tts
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Create output directories
+        run: |
+          mkdir -p public/generated-videos
+          mkdir -p .video-tmp
+
+      - name: Run video generation script
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          FROM: ${{ github.event.inputs.from || '1' }}
+          TO: ${{ github.event.inputs.to || '200' }}
+          FORCE_REGENERATE: ${{ github.event.inputs.force_regenerate || '0' }}
+          LOCALES: ${{ github.event.inputs.locales || 'ru,uz' }}
+        run: node scripts/generate-videos-from-seed.mjs
+
+      - name: Upload generated videos as artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-videos
+          path: public/generated-videos/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Commit database updates (if any)
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: update lesson video URLs"
+          git push
