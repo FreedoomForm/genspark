@@ -117,123 +117,351 @@ function narration(lesson, locale) {
   return `${lesson.order}-dars. ${lesson.uzName}. ${lesson.uzDescription || ''}. ${lesson.uzFunctionality || ''}. Interfeysdagi joylashuvi: ${lesson.uiLocation || ''}.`;
 }
 
+// Real coordinates from VLM analysis (converted from % to pixels, WIDTH=854, HEIGHT=480)
 function sidebarTarget(location) {
   const sidebarMap = [
-    ['главная', { x: 92, y: 84 }],
-    ['складские операции', { x: 102, y: 132 }],
-    ['справочник', { x: 86, y: 180 }],
-    ['финансовые операции', { x: 100, y: 228 }],
-    ['отчёты', { x: 76, y: 278 }],
-    ['отчеты', { x: 76, y: 278 }],
-    ['настройки', { x: 78, y: 332 }],
-    ['кабинет', { x: 72, y: 382 }],
-    ['выход', { x: 82, y: 440 }],
+    ['главная', { x: 53, y: 70 }],  // ~6.25%, ~14.5%
+    ['складские операции', { x: 53, y: 102 }],  // ~6.25%, ~21%
+    ['справочник', { x: 53, y: 132 }],  // ~6.25%, ~27.5%
+    ['финансовые операции', { x: 53, y: 163 }],  // ~6.25%, ~34%
+    ['отчёты', { x: 53, y: 194 }],  // ~6.25%, ~40.5%
+    ['отчеты', { x: 53, y: 194 }],
+    ['настройки', { x: 53, y: 225 }],  // ~6.25%, ~47%
+    ['кабинет', { x: 53, y: 256 }],  // ~6.25%, ~53.5%
+    ['выход', { x: 53, y: 450 }],  // bottom area
   ];
 
   for (const [needle, target] of sidebarMap) {
     if (location.includes(needle)) return target;
   }
 
-  return { x: 96, y: 132 };
+  return { x: 53, y: 102 };
 }
 
 function targetForProducts(location, lessonName) {
   const t = `${location} ${lessonName}`;
-  if (containsAny(t, ['поле поиска', 'поиск'])) return { x: 472, y: 278 };
+  // Real coordinates from VLM analysis of products.png
+  if (containsAny(t, ['поле поиска', 'поиск'])) return { x: 512, y: 175 };  // ~60%, ~36%
   if (containsAny(t, ['фильтры', 'фильтр'])) {
-    if (containsAny(t, ['категория'])) return { x: 742, y: 278 };
-    if (containsAny(t, ['склад'])) return { x: 795, y: 278 };
-    if (containsAny(t, ['касса'])) return { x: 780, y: 278 };
-    if (containsAny(t, ['дата', 'период'])) return { x: 350, y: 112 };
-    if (containsAny(t, ['статус'])) return { x: 620, y: 112 };
-    if (containsAny(t, ['поставщик'])) return { x: 525, y: 112 };
-    return { x: 752, y: 278 };
+    if (containsAny(t, ['категория'])) return { x: 640, y: 175 };  // ~75%, ~36%
+    if (containsAny(t, ['склад'])) return { x: 683, y: 175 };  // ~80%, ~36%
+    return { x: 683, y: 175 };
   }
-  if (containsAny(t, ['иконка карандаша', 'редактировать'])) return { x: 784, y: 348 };
-  if (containsAny(t, ['иконка корзины', 'удалить'])) return { x: 816, y: 348 };
-  if (containsAny(t, ['иконка звезды', 'избран'])) return { x: 748, y: 348 };
-  if (containsAny(t, ['иконка сканера', 'сканер'])) return { x: 790, y: 278 };
-  if (containsAny(t, ['клик на название', 'карточка'])) return { x: 348, y: 348 };
-  if (containsAny(t, ['чекбоксы', 'массовые действия', 'массовое'])) return { x: 246, y: 348 };
-  if (containsAny(t, ['штрих-код'])) return { x: 530, y: 164 };
-  if (containsAny(t, ['история'])) return { x: 642, y: 164 };
-  if (containsAny(t, ['новая цена'])) return { x: 625, y: 255 };
-  if (containsAny(t, ['поставщик'])) return { x: 342, y: 172 };
-  if (containsAny(t, ['покупатель'])) return { x: 342, y: 172 };
-  if (containsAny(t, ['отправитель'])) return { x: 330, y: 172 };
-  if (containsAny(t, ['получатель'])) return { x: 592, y: 172 };
-  if (containsAny(t, ['причина'])) return { x: 430, y: 206 };
-  if (containsAny(t, ['создать', 'добавить', 'экспорт', 'провести', 'копировать', 'печать', 'отменить'])) return { x: 780, y: 44 };
-  return { x: 780, y: 44 };
+  if (containsAny(t, ['иконка карандаша', 'редактировать'])) return { x: 790, y: 168 };  // right side edit
+  if (containsAny(t, ['иконка корзины', 'удалить'])) return { x: 820, y: 168 };  // right side delete
+  if (containsAny(t, ['иконка звезды', 'избран'])) return { x: 760, y: 168 };
+  if (containsAny(t, ['клик на название', 'карточка'])) return { x: 320, y: 168 };  // product name
+  if (containsAny(t, ['чекбоксы', 'массовые действия', 'массовое'])) return { x: 210, y: 168 };
+  if (containsAny(t, ['штрих-код'])) return { x: 450, y: 79 };
+  if (containsAny(t, ['история'])) return { x: 550, y: 79 };
+  if (containsAny(t, ['поставщик'])) return { x: 300, y: 96 };
+  if (containsAny(t, ['покупатель'])) return { x: 300, y: 96 };
+  // Main action button "Добавить товар" - right side top
+  if (containsAny(t, ['создать', 'добавить', 'экспорт', 'провести', 'копировать', 'печать', 'отменить'])) return { x: 790, y: 36 };
+  return { x: 790, y: 36 };  // Default: "Добавить" button
 }
 
 function targetForDashboard(location, lessonName) {
   const t = `${location} ${lessonName}`;
-  if (t.includes('верхняя панель') && containsAny(t, ['имя пользователя', 'профиль'])) return { x: 792, y: 34 };
-  if (containsAny(t, ['главная'])) return { x: 92, y: 84 };
-  if (containsAny(t, ['кабинет'])) return { x: 74, y: 382 };
-  if (containsAny(t, ['выход'])) return { x: 88, y: 438 };
-  if (containsAny(t, ['смена пароля'])) return { x: 420, y: 198 };
-  if (containsAny(t, ['уведомления'])) return { x: 420, y: 248 };
-  if (containsAny(t, ['история входов'])) return { x: 420, y: 300 };
-  if (containsAny(t, ['удалить аккаунт'])) return { x: 420, y: 352 };
-  return { x: 420, y: 100 };
+  // Real coordinates from VLM analysis of dashboard.png
+  if (t.includes('верхняя панель') && containsAny(t, ['имя пользователя', 'профиль'])) return { x: 790, y: 34 };
+  if (containsAny(t, ['главная'])) return { x: 53, y: 70 };  // sidebar
+  if (containsAny(t, ['кабинет'])) return { x: 53, y: 256 };  // sidebar
+  if (containsAny(t, ['выход'])) return { x: 53, y: 450 };
+  if (containsAny(t, ['смена пароля'])) return { x: 360, y: 95 };
+  if (containsAny(t, ['уведомления'])) return { x: 360, y: 119 };
+  if (containsAny(t, ['история входов'])) return { x: 360, y: 144 };
+  if (containsAny(t, ['удалить аккаунт'])) return { x: 360, y: 169 };
+  // Grid buttons on dashboard (Счета, Проданные чеки, etc.)
+  if (containsAny(t, ['счета'])) return { x: 240, y: 79 };  // ~28%, ~16.5%
+  if (containsAny(t, ['проданные чеки'])) return { x: 375, y: 79 };  // ~44%
+  if (containsAny(t, ['товары'])) return { x: 502, y: 79 };  // ~59%
+  if (containsAny(t, ['приход'])) return { x: 632, y: 79 };  // ~74%
+  if (containsAny(t, ['отчет о продаже'])) return { x: 780, y: 79 };  // ~91%
+  // Warehouse operations row
+  if (containsAny(t, ['возврат прихода'])) return { x: 502, y: 211 };  // ~59%, ~44%
+  if (containsAny(t, ['трансфер'])) return { x: 632, y: 211 };  // ~74%
+  if (containsAny(t, ['реализация'])) return { x: 780, y: 211 };  // ~91%
+  if (containsAny(t, ['переоценка'])) return { x: 240, y: 326 };  // ~28%, ~68%
+  if (containsAny(t, ['инвентаризация'])) return { x: 375, y: 326 };
+  if (containsAny(t, ['списание'])) return { x: 502, y: 326 };
+  if (containsAny(t, ['группировка'])) return { x: 632, y: 326 };
+  if (containsAny(t, ['весовые товары'])) return { x: 780, y: 326 };
+  return { x: 427, y: 120 };  // Default: center
 }
 
 function targetForBalance(location, lessonName) {
   const t = `${location} ${lessonName}`;
-  if (containsAny(t, ['баланс'])) return { x: 738, y: 34 };
-  if (containsAny(t, ['пополнение'])) return { x: 796, y: 34 };
-  if (containsAny(t, ['дата', 'период'])) return { x: 332, y: 94 };
-  if (containsAny(t, ['сформировать'])) return { x: 554, y: 94 };
-  return { x: 738, y: 34 };
+  // Real coordinates from VLM analysis of balance.png
+  if (containsAny(t, ['баланс'])) return { x: 630, y: 16 };  // top right ~74%
+  if (containsAny(t, ['пополнение'])) return { x: 680, y: 16 };  // top right
+  if (containsAny(t, ['дата', 'период'])) return { x: 284, y: 45 };  // ~33%
+  if (containsAny(t, ['сформировать'])) return { x: 495, y: 45 };  // ~58%
+  return { x: 630, y: 16 };
 }
 
 function targetForListPage(location, lessonName) {
   const t = `${location} ${lessonName}`;
   if (location.includes('боковое меню')) return sidebarTarget(location);
-  if (containsAny(t, ['кнопка "создать"', 'кнопка "добавить"', 'создать', 'добавить', 'начислить', 'выплатить', 'подключить', 'сохранить', 'оплатить', 'открыть', 'закрыть'])) return { x: 786, y: 46 };
-  if (containsAny(t, ['кнопка "печать"', 'печать', 'экспорт', 'сменить'])) return { x: 700, y: 46 };
-  if (containsAny(t, ['кнопка "удалить"', 'удалить', 'кнопка "отменить"', 'отменить'])) return { x: 792, y: 206 };
-  if (containsAny(t, ['кнопка "провести"', 'провести', 'кнопка "отправить"', 'отправить', 'кнопка "принять"', 'принять'])) return { x: 742, y: 206 };
+  // Main action buttons (Добавить, Создать, etc.) - top right ~92-94%
+  if (containsAny(t, ['кнопка "создать"', 'кнопка "добавить"', 'создать', 'добавить', 'начислить', 'выплатить', 'подключить', 'сохранить', 'оплатить', 'открыть', 'закрыть'])) return { x: 790, y: 36 };
+  if (containsAny(t, ['кнопка "печать"', 'печать', 'экспорт', 'сменить'])) return { x: 600, y: 36 };
+  if (containsAny(t, ['кнопка "удалить"', 'удалить', 'кнопка "отменить"', 'отменить'])) return { x: 820, y: 168 };
+  if (containsAny(t, ['кнопка "провести"', 'провести', 'кнопка "отправить"', 'отправить', 'кнопка "принять"', 'принять'])) return { x: 760, y: 168 };
+  // Filter area
   if (containsAny(t, ['фильтры', 'фильтр'])) {
-    if (containsAny(t, ['дата', 'период'])) return { x: 342, y: 112 };
-    if (containsAny(t, ['поставщик'])) return { x: 520, y: 112 };
-    if (containsAny(t, ['статус'])) return { x: 610, y: 112 };
-    if (containsAny(t, ['касса'])) return { x: 690, y: 112 };
-    return { x: 520, y: 112 };
+    if (containsAny(t, ['дата', 'период'])) return { x: 300, y: 54 };  // ~35%
+    if (containsAny(t, ['поставщик'])) return { x: 450, y: 54 };  // ~52%
+    if (containsAny(t, ['статус'])) return { x: 520, y: 54 };  // ~61%
+    if (containsAny(t, ['касса'])) return { x: 590, y: 54 };  // ~69%
+    return { x: 450, y: 54 };
   }
+  // Tabs (Оформленные, Черновик, etc.)
+  if (containsAny(t, ['оформленные'])) return { x: 250, y: 94 };
+  if (containsAny(t, ['отправленные'])) return { x: 340, y: 94 };
+  if (containsAny(t, ['черновик'])) return { x: 430, y: 94 };
+  if (containsAny(t, ['все'])) return { x: 220, y: 94 };
+  // Input fields
   if (containsAny(t, ['поле'])) {
-    if (containsAny(t, ['должность'])) return { x: 350, y: 194 };
-    if (containsAny(t, ['pin'])) return { x: 620, y: 194 };
-    if (containsAny(t, ['автомобиль'])) return { x: 620, y: 194 };
-    if (containsAny(t, ['логотип'])) return { x: 480, y: 186 };
-    if (containsAny(t, ['язык'])) return { x: 430, y: 220 };
-    return { x: 420, y: 186 };
+    if (containsAny(t, ['должность'])) return { x: 300, y: 93 };
+    if (containsAny(t, ['pin'])) return { x: 530, y: 93 };
+    if (containsAny(t, ['автомобиль'])) return { x: 530, y: 93 };
+    if (containsAny(t, ['логотип'])) return { x: 410, y: 89 };
+    if (containsAny(t, ['язык'])) return { x: 367, y: 105 };
+    return { x: 360, y: 89 };
   }
   if (containsAny(t, ['вкладка'])) {
-    if (containsAny(t, ['права'])) return { x: 558, y: 154 };
-    if (containsAny(t, ['история'])) return { x: 652, y: 154 };
-    return { x: 560, y: 154 };
+    if (containsAny(t, ['права'])) return { x: 476, y: 74 };
+    if (containsAny(t, ['история'])) return { x: 557, y: 74 };
+    return { x: 476, y: 74 };
   }
-  if (containsAny(t, ['колонка'])) return { x: 580, y: 214 };
-  if (containsAny(t, ['клик на чек', 'клик на название'])) return { x: 340, y: 214 };
-  return { x: 786, y: 46 };
+  if (containsAny(t, ['колонка'])) return { x: 495, y: 103 };
+  if (containsAny(t, ['клик на чек', 'клик на название'])) return { x: 290, y: 103 };
+  return { x: 790, y: 36 };  // Default: action button
 }
 
+// Screenshot-specific targets based on VLM analysis
 function targetForShot(baseName, location, lessonName) {
-  if (baseName === 'products.png' || baseName === 'products_page.png' || baseName === 'products_new.png') {
-    return targetForProducts(location, lessonName);
-  }
+  // Map specific screenshots to their button positions
+  const screenshotTargets = {
+    'products.png': targetForProducts,
+    'products_page.png': targetForProducts,
+    'products_new.png': targetForProducts,
+    'dashboard.png': targetForDashboard,
+    'dashboard_full.png': targetForDashboard,
+    'dashboard_new.png': targetForDashboard,
+    'balance.png': targetForBalance,
+    // Receipt/Coming page
+    'receipt.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['создать приход', 'создать'])) return { x: 795, y: 36 };
+      if (containsAny(t, ['импорт'])) return { x: 683, y: 36 };
+      if (containsAny(t, ['оформленные'])) return { x: 250, y: 254 };
+      if (containsAny(t, ['отправленные'])) return { x: 350, y: 254 };
+      if (containsAny(t, ['черновик'])) return { x: 435, y: 254 };
+      return { x: 795, y: 36 };
+    },
+    // Inventory
+    'inventory.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['новая инвентаризация', 'создать'])) return { x: 780, y: 36 };
+      if (containsAny(t, ['оформленные'])) return { x: 250, y: 96 };
+      if (containsAny(t, ['отправленные'])) return { x: 350, y: 96 };
+      if (containsAny(t, ['черновик'])) return { x: 435, y: 96 };
+      return { x: 780, y: 36 };
+    },
+    // Transfer
+    'transfer.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['добавить', 'создать'])) return { x: 800, y: 34 };
+      if (containsAny(t, ['все'])) return { x: 220, y: 90 };
+      if (containsAny(t, ['отправленные'])) return { x: 300, y: 90 };
+      if (containsAny(t, ['полученные'])) return { x: 395, y: 90 };
+      return { x: 800, y: 34 };
+    },
+    // Realization
+    'realization.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['новая реализация', 'создать'])) return { x: 785, y: 36 };
+      if (containsAny(t, ['оформленные'])) return { x: 250, y: 132 };
+      if (containsAny(t, ['отправленные'])) return { x: 350, y: 132 };
+      if (containsAny(t, ['черновик'])) return { x: 435, y: 132 };
+      return { x: 785, y: 36 };
+    },
+    // Clients
+    'clients.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['добавить', 'создать'])) return { x: 800, y: 36 };
+      if (containsAny(t, ['поиск'])) return { x: 512, y: 185 };
+      return { x: 800, y: 36 };
+    },
+    // Contractors
+    'contractors.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['добавить контрагента', 'добавить', 'создать'])) return { x: 772, y: 36 };
+      if (containsAny(t, ['поиск'])) return { x: 508, y: 97 };
+      return { x: 772, y: 36 };
+    },
+    // Personnel
+    'personnel.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['счета'])) return { x: 240, y: 79 };
+      if (containsAny(t, ['проданные чеки'])) return { x: 375, y: 79 };
+      if (containsAny(t, ['товары'])) return { x: 502, y: 79 };
+      if (containsAny(t, ['приход'])) return { x: 632, y: 79 };
+      return { x: 427, y: 120 };
+    },
+    // Settings pages
+    'interface.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['светлая'])) return { x: 587, y: 108 };
+      if (containsAny(t, ['темная'])) return { x: 685, y: 108 };
+      if (containsAny(t, ['авто'])) return { x: 783, y: 108 };
+      if (containsAny(t, ['o\'zbek', 'uzbek'])) return { x: 720, y: 190 };
+      if (containsAny(t, ['русский', 'russian'])) return { x: 792, y: 190 };
+      return { x: 427, y: 120 };
+    },
+    'parameters.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['новый параметр', 'создать'])) return { x: 782, y: 31 };
+      if (containsAny(t, ['удалить'])) return { x: 828, y: 84 };
+      return { x: 782, y: 31 };
+    },
+    'tags.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['новый тег', 'создать'])) return { x: 790, y: 31 };
+      if (containsAny(t, ['удалить'])) return { x: 826, y: 84 };
+      return { x: 790, y: 31 };
+    },
+    'cash_registers.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['edit', 'редактировать'])) return { x: 790, y: 137 };
+      return { x: 790, y: 36 };
+    },
+    'company_data.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['назад', 'back'])) return { x: 210, y: 31 };
+      return { x: 427, y: 120 };
+    },
+    'subscriptions.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['назад', 'back'])) return { x: 210, y: 31 };
+      return { x: 427, y: 120 };
+    },
+    'loyalty.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['редактирование', 'edit'])) return { x: 783, y: 31 };
+      if (containsAny(t, ['история'])) return { x: 770, y: 262 };
+      return { x: 427, y: 120 };
+    },
+    'sales_report.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['назад', 'back'])) return { x: 210, y: 31 };
+      return { x: 427, y: 120 };
+    },
+    'shifts.png': (loc, name) => {
+      return { x: 210, y: 31 };  // Back button or page title
+    },
+    'drivers.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['добавить', 'создать'])) return { x: 788, y: 40 };
+      return { x: 788, y: 40 };
+    },
+    'tech_cards.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['новая техкарта', 'создать'])) return { x: 760, y: 34 };
+      return { x: 760, y: 34 };
+    },
+    'grouping.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['сгруппировать', 'создать'])) return { x: 770, y: 34 };
+      if (containsAny(t, ['фильтр'])) return { x: 750, y: 91 };
+      return { x: 770, y: 34 };
+    },
+    'favorite_products.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['удалить'])) return { x: 780, y: 168 };
+      return { x: 780, y: 168 };
+    },
+    'writeoff.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['новое списание', 'создать'])) return { x: 780, y: 32 };
+      if (containsAny(t, ['оформленные'])) return { x: 250, y: 94 };
+      if (containsAny(t, ['отправленные'])) return { x: 340, y: 94 };
+      if (containsAny(t, ['черновик'])) return { x: 430, y: 94 };
+      return { x: 780, y: 32 };
+    },
+    'reprice.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['создать переоценку', 'создать'])) return { x: 780, y: 36 };
+      if (containsAny(t, ['оформленные'])) return { x: 250, y: 94 };
+      if (containsAny(t, ['отправленные'])) return { x: 340, y: 94 };
+      if (containsAny(t, ['черновик'])) return { x: 430, y: 94 };
+      return { x: 780, y: 36 };
+    },
+    'import_products.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['добавить', 'создать'])) return { x: 800, y: 36 };
+      if (containsAny(t, ['импорт'])) return { x: 210, y: 36 };
+      return { x: 800, y: 36 };
+    },
+    'print_pricetags.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['печать бар-кода', 'печать'])) return { x: 508, y: 370 };
+      return { x: 508, y: 370 };
+    },
+    'telegram_bot.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['отправить тестовый текст', 'отправить'])) return { x: 710, y: 86 };
+      return { x: 710, y: 86 };
+    },
+    'sms_blast.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['новая рассылка', 'создать'])) return { x: 783, y: 32 };
+      return { x: 783, y: 32 };
+    },
+    'salary.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['поиск'])) return { x: 474, y: 214 };
+      if (containsAny(t, ['сортировать'])) return { x: 585, y: 214 };
+      return { x: 474, y: 214 };
+    },
+    'mutual_settlements.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['оформить', 'создать'])) return { x: 800, y: 31 };
+      if (containsAny(t, ['назад', 'back'])) return { x: 210, y: 31 };
+      return { x: 800, y: 31 };
+    },
+    'abc_report.png': (loc, name) => {
+      return { x: 833, y: 36 };  // info button
+    },
+    'xyz_report.png': (loc, name) => {
+      return { x: 833, y: 36 };  // info button
+    },
+    'top_sales.png': (loc, name) => {
+      return { x: 427, y: 120 };
+    },
+    'edo.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['войти', 'login'])) return { x: 788, y: 161 };
+      return { x: 788, y: 161 };
+    },
+    'pricing.png': (loc, name) => {
+      const t = `${loc} ${name}`;
+      if (containsAny(t, ['назад', 'back'])) return { x: 210, y: 36 };
+      return { x: 427, y: 120 };
+    },
+    'tariffs.png': (loc, name) => {
+      // Dashboard-like with grid buttons
+      return targetForDashboard(location, lessonName);
+    },
+    'z_reports.png': (loc, name) => {
+      return { x: 210, y: 31 };  // back button
+    },
+  };
 
-  if (baseName === 'dashboard.png' || baseName === 'dashboard_full.png' || baseName === 'dashboard_new.png') {
-    return targetForDashboard(location, lessonName);
-  }
-
-  if (baseName === 'balance.png') {
-    return targetForBalance(location, lessonName);
-  }
-
+  const handler = screenshotTargets[baseName.toLowerCase()];
+  if (handler) return handler(location, lessonName);
   return targetForListPage(location, lessonName);
 }
 
