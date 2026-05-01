@@ -18,6 +18,10 @@ const LOCALES = (process.env.LOCALES || 'ru,uz').split(',').map((s) => s.trim())
 const BLOB_ENABLED = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 const UPLOAD_ONLY = process.env.UPLOAD_ONLY === '1';
 const EDGE_TTS_BIN = fs.existsSync('/usr/local/bin/edge-tts') ? '/usr/local/bin/edge-tts' : 'edge-tts';
+const FPS = Number(process.env.VIDEO_FPS || '24');
+const WIDTH = 854;
+const HEIGHT = 480;
+const MAX_ZOOM = Number(process.env.VIDEO_MAX_ZOOM || '1.32');
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.mkdirSync(TMP_DIR, { recursive: true });
@@ -37,6 +41,14 @@ function ffPath(p) {
 function ffprobeDuration(file) {
   const out = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file], { encoding: 'utf8' }).trim();
   return Math.max(6, Math.ceil(Number(out || '6')));
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function containsAny(text, keywords) {
+  return keywords.some((keyword) => text.includes(keyword));
 }
 
 function categoryFallback(category) {
@@ -105,14 +117,150 @@ function narration(lesson, locale) {
   return `${lesson.order}-dars. ${lesson.uzName}. ${lesson.uzDescription || ''}. ${lesson.uzFunctionality || ''}. Interfeysdagi joylashuvi: ${lesson.uiLocation || ''}.`;
 }
 
+function sidebarTarget(location) {
+  const sidebarMap = [
+    ['главная', { x: 92, y: 84 }],
+    ['складские операции', { x: 102, y: 132 }],
+    ['справочник', { x: 86, y: 180 }],
+    ['финансовые операции', { x: 100, y: 228 }],
+    ['отчёты', { x: 76, y: 278 }],
+    ['отчеты', { x: 76, y: 278 }],
+    ['настройки', { x: 78, y: 332 }],
+    ['кабинет', { x: 72, y: 382 }],
+    ['выход', { x: 82, y: 440 }],
+  ];
+
+  for (const [needle, target] of sidebarMap) {
+    if (location.includes(needle)) return target;
+  }
+
+  return { x: 96, y: 132 };
+}
+
+function targetForProducts(location, lessonName) {
+  const t = `${location} ${lessonName}`;
+  if (containsAny(t, ['поле поиска', 'поиск'])) return { x: 472, y: 278 };
+  if (containsAny(t, ['фильтры', 'фильтр'])) {
+    if (containsAny(t, ['категория'])) return { x: 742, y: 278 };
+    if (containsAny(t, ['склад'])) return { x: 795, y: 278 };
+    if (containsAny(t, ['касса'])) return { x: 780, y: 278 };
+    if (containsAny(t, ['дата', 'период'])) return { x: 350, y: 112 };
+    if (containsAny(t, ['статус'])) return { x: 620, y: 112 };
+    if (containsAny(t, ['поставщик'])) return { x: 525, y: 112 };
+    return { x: 752, y: 278 };
+  }
+  if (containsAny(t, ['иконка карандаша', 'редактировать'])) return { x: 784, y: 348 };
+  if (containsAny(t, ['иконка корзины', 'удалить'])) return { x: 816, y: 348 };
+  if (containsAny(t, ['иконка звезды', 'избран'])) return { x: 748, y: 348 };
+  if (containsAny(t, ['иконка сканера', 'сканер'])) return { x: 790, y: 278 };
+  if (containsAny(t, ['клик на название', 'карточка'])) return { x: 348, y: 348 };
+  if (containsAny(t, ['чекбоксы', 'массовые действия', 'массовое'])) return { x: 246, y: 348 };
+  if (containsAny(t, ['штрих-код'])) return { x: 530, y: 164 };
+  if (containsAny(t, ['история'])) return { x: 642, y: 164 };
+  if (containsAny(t, ['новая цена'])) return { x: 625, y: 255 };
+  if (containsAny(t, ['поставщик'])) return { x: 342, y: 172 };
+  if (containsAny(t, ['покупатель'])) return { x: 342, y: 172 };
+  if (containsAny(t, ['отправитель'])) return { x: 330, y: 172 };
+  if (containsAny(t, ['получатель'])) return { x: 592, y: 172 };
+  if (containsAny(t, ['причина'])) return { x: 430, y: 206 };
+  if (containsAny(t, ['создать', 'добавить', 'экспорт', 'провести', 'копировать', 'печать', 'отменить'])) return { x: 780, y: 44 };
+  return { x: 780, y: 44 };
+}
+
+function targetForDashboard(location, lessonName) {
+  const t = `${location} ${lessonName}`;
+  if (t.includes('верхняя панель') && containsAny(t, ['имя пользователя', 'профиль'])) return { x: 792, y: 34 };
+  if (containsAny(t, ['главная'])) return { x: 92, y: 84 };
+  if (containsAny(t, ['кабинет'])) return { x: 74, y: 382 };
+  if (containsAny(t, ['выход'])) return { x: 88, y: 438 };
+  if (containsAny(t, ['смена пароля'])) return { x: 420, y: 198 };
+  if (containsAny(t, ['уведомления'])) return { x: 420, y: 248 };
+  if (containsAny(t, ['история входов'])) return { x: 420, y: 300 };
+  if (containsAny(t, ['удалить аккаунт'])) return { x: 420, y: 352 };
+  return { x: 420, y: 100 };
+}
+
+function targetForBalance(location, lessonName) {
+  const t = `${location} ${lessonName}`;
+  if (containsAny(t, ['баланс'])) return { x: 738, y: 34 };
+  if (containsAny(t, ['пополнение'])) return { x: 796, y: 34 };
+  if (containsAny(t, ['дата', 'период'])) return { x: 332, y: 94 };
+  if (containsAny(t, ['сформировать'])) return { x: 554, y: 94 };
+  return { x: 738, y: 34 };
+}
+
+function targetForListPage(location, lessonName) {
+  const t = `${location} ${lessonName}`;
+  if (location.includes('боковое меню')) return sidebarTarget(location);
+  if (containsAny(t, ['кнопка "создать"', 'кнопка "добавить"', 'создать', 'добавить', 'начислить', 'выплатить', 'подключить', 'сохранить', 'оплатить', 'открыть', 'закрыть'])) return { x: 786, y: 46 };
+  if (containsAny(t, ['кнопка "печать"', 'печать', 'экспорт', 'сменить'])) return { x: 700, y: 46 };
+  if (containsAny(t, ['кнопка "удалить"', 'удалить', 'кнопка "отменить"', 'отменить'])) return { x: 792, y: 206 };
+  if (containsAny(t, ['кнопка "провести"', 'провести', 'кнопка "отправить"', 'отправить', 'кнопка "принять"', 'принять'])) return { x: 742, y: 206 };
+  if (containsAny(t, ['фильтры', 'фильтр'])) {
+    if (containsAny(t, ['дата', 'период'])) return { x: 342, y: 112 };
+    if (containsAny(t, ['поставщик'])) return { x: 520, y: 112 };
+    if (containsAny(t, ['статус'])) return { x: 610, y: 112 };
+    if (containsAny(t, ['касса'])) return { x: 690, y: 112 };
+    return { x: 520, y: 112 };
+  }
+  if (containsAny(t, ['поле'])) {
+    if (containsAny(t, ['должность'])) return { x: 350, y: 194 };
+    if (containsAny(t, ['pin'])) return { x: 620, y: 194 };
+    if (containsAny(t, ['автомобиль'])) return { x: 620, y: 194 };
+    if (containsAny(t, ['логотип'])) return { x: 480, y: 186 };
+    if (containsAny(t, ['язык'])) return { x: 430, y: 220 };
+    return { x: 420, y: 186 };
+  }
+  if (containsAny(t, ['вкладка'])) {
+    if (containsAny(t, ['права'])) return { x: 558, y: 154 };
+    if (containsAny(t, ['история'])) return { x: 652, y: 154 };
+    return { x: 560, y: 154 };
+  }
+  if (containsAny(t, ['колонка'])) return { x: 580, y: 214 };
+  if (containsAny(t, ['клик на чек', 'клик на название'])) return { x: 340, y: 214 };
+  return { x: 786, y: 46 };
+}
+
+function targetForShot(baseName, location, lessonName) {
+  if (baseName === 'products.png' || baseName === 'products_page.png' || baseName === 'products_new.png') {
+    return targetForProducts(location, lessonName);
+  }
+
+  if (baseName === 'dashboard.png' || baseName === 'dashboard_full.png' || baseName === 'dashboard_new.png') {
+    return targetForDashboard(location, lessonName);
+  }
+
+  if (baseName === 'balance.png') {
+    return targetForBalance(location, lessonName);
+  }
+
+  return targetForListPage(location, lessonName);
+}
+
 function coords(lesson) {
-  const t = String(lesson.uiLocation || '').toLowerCase();
-  if (t.includes('боковое меню')) return { x1: 60, y1: 160, x2: 180, y2: 250 };
-  if (t.includes('верхняя панель')) return { x1: 700, y1: 50, x2: 800, y2: 70 };
-  if (t.includes('поиск')) return { x1: 600, y1: 120, x2: 500, y2: 120 };
-  if (t.includes('фильтр')) return { x1: 760, y1: 140, x2: 650, y2: 145 };
-  if (t.includes('кнопка')) return { x1: 760, y1: 120, x2: 680, y2: 120 };
-  return { x1: 700, y1: 140, x2: 400, y2: 240 };
+  const location = String(lesson.uiLocation || '').toLowerCase();
+  const lessonName = String(lesson.ruName || '').toLowerCase();
+  const shot = lesson.screenshot || categoryFallback(lesson.category);
+  const baseName = path.basename(shot || '').toLowerCase();
+
+  const target = targetForShot(baseName, location, lessonName);
+  const start = target.x < WIDTH / 2
+    ? { x: clamp(target.x + 240, 96, WIDTH - 90), y: clamp(target.y + 140, 88, HEIGHT - 60) }
+    : { x: clamp(target.x - 260, 54, WIDTH - 110), y: clamp(target.y + 150, 88, HEIGHT - 60) };
+
+  const focus = {
+    w: containsAny(location, ['иконка', 'клик']) ? 64 : containsAny(location, ['поле', 'фильтр']) ? 132 : 110,
+    h: containsAny(location, ['иконка', 'клик']) ? 44 : containsAny(location, ['поле', 'фильтр']) ? 42 : 38,
+  };
+
+  return {
+    x1: start.x,
+    y1: start.y,
+    x2: clamp(target.x, 36, WIDTH - 36),
+    y2: clamp(target.y, 36, HEIGHT - 36),
+    focus,
+    screenshot: baseName,
+  };
 }
 
 function writeText(file, text) {
@@ -129,19 +277,62 @@ function synthesize(text, locale, outFile) {
 function makeVideo(lesson, locale, imagePath, audioPath, outFile) {
   const duration = ffprobeDuration(audioPath);
   const c = coords(lesson);
-  const xExpr = `${c.x1}+(${c.x2 - c.x1})*min(1\\,t/${duration})`;
-  const yExpr = `${c.y1}+(${c.y2 - c.y1})*min(1\\,t/${duration})`;
+  const moveEnd = Math.max(2.5, duration * 0.62);
+  const zoomEnd = Math.max(3.5, duration * 0.82);
+  const clickStart = Math.max(2.2, duration * 0.72);
   const work = path.join(TMP_DIR, `${lesson.order}-${locale}`);
   const title = locale === 'ru' ? lesson.ruName : lesson.uzName;
-  writeText(path.join(work, 'title.txt'), title);
-  writeText(path.join(work, 'loc.txt'), lesson.uiLocation || '');
+  const locationWithCoords = `${lesson.uiLocation || ''} • x:${c.x2}, y:${c.y2}`;
 
-  const filter = `[0:v]scale=854:480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p,drawbox=x=0:y=0:w=iw:h=58:color=black@0.45:t=fill,drawbox=x=0:y=ih-76:w=iw:h=76:color=black@0.45:t=fill,drawtext=fontfile=${ffPath(FONT_BOLD)}:textfile=${ffPath(path.join(work, 'title.txt'))}:fontsize=28:fontcolor=white:x=24:y=14,drawtext=fontfile=${ffPath(FONT_REG)}:textfile=${ffPath(path.join(work, 'loc.txt'))}:fontsize=18:fontcolor=white:x=24:y=h-48,drawtext=fontfile=${ffPath(FONT_BOLD)}:text='\\u25CF':fontsize=34:fontcolor=yellow:borderw=3:bordercolor=black:x='${xExpr}':y='${yExpr}'[v]`;
+  fs.mkdirSync(work, { recursive: true });
+  writeText(path.join(work, 'title.txt'), title);
+  writeText(path.join(work, 'loc.txt'), locationWithCoords);
+
+  const xExpr = `if(lt(t,${moveEnd}),${c.x1}+(${c.x2 - c.x1})*min(1\\,t/${moveEnd}),${c.x2})`;
+  const yExpr = `if(lt(t,${moveEnd}),${c.y1}+(${c.y2 - c.y1})*min(1\\,t/${moveEnd}),${c.y2})`;
+  const zoomExpr = `1+(${MAX_ZOOM - 1})*min(1\\,t/${zoomEnd})`;
+  const highlightX = c.x2 - Math.round(c.focus.w / 2);
+  const highlightY = c.y2 - Math.round(c.focus.h / 2);
+
+  const preZoom = [
+    `scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=decrease`,
+    `pad=${WIDTH}:${HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=white`,
+    'format=yuv420p',
+    `drawbox=x=${highlightX}:y=${highlightY}:w=${c.focus.w}:h=${c.focus.h}:color=yellow@0.55:t=3:enable='between(t,${clickStart - 0.15},${duration})'`,
+    `drawtext=fontfile=${ffPath(FONT_BOLD)}:text='●':fontsize=42:fontcolor=black@0.28:x='(${xExpr})-17':y='(${yExpr})-13'`,
+    `drawtext=fontfile=${ffPath(FONT_BOLD)}:text='●':fontsize=28:fontcolor=yellow:borderw=2:bordercolor=black:x='(${xExpr})-12':y='(${yExpr})-9'`,
+    `drawtext=fontfile=${ffPath(FONT_BOLD)}:text='◎':fontsize=62:fontcolor=white@0.92:x='${c.x2 - 25}':y='${c.y2 - 27}':enable='between(t,${clickStart},${clickStart + 0.18})'`,
+    `drawtext=fontfile=${ffPath(FONT_BOLD)}:text='◎':fontsize=96:fontcolor=yellow@0.72:x='${c.x2 - 41}':y='${c.y2 - 43}':enable='between(t,${clickStart + 0.1},${clickStart + 0.34})'`,
+    `drawtext=fontfile=${ffPath(FONT_BOLD)}:text='✦':fontsize=48:fontcolor=white@0.96:x='${c.x2 - 14}':y='${c.y2 - 30}':enable='between(t,${clickStart},${clickStart + 0.1})'`,
+    `scale=w='trunc(${WIDTH}*(${zoomExpr})/2)*2':h='trunc(${HEIGHT}*(${zoomExpr})/2)*2':eval=frame`,
+    `crop=${WIDTH}:${HEIGHT}:x='max(0,min(iw-${WIDTH},${c.x2}*(iw/${WIDTH})-${WIDTH}/2))':y='max(0,min(ih-${HEIGHT},${c.y2}*(ih/${HEIGHT})-${HEIGHT}/2))'`,
+    `drawbox=x=0:y=0:w=iw:h=58:color=black@0.44:t=fill`,
+    `drawbox=x=0:y=ih-76:w=iw:h=76:color=black@0.44:t=fill`,
+    `drawtext=fontfile=${ffPath(FONT_BOLD)}:textfile=${ffPath(path.join(work, 'title.txt'))}:fontsize=28:fontcolor=white:x=24:y=14`,
+    `drawtext=fontfile=${ffPath(FONT_REG)}:textfile=${ffPath(path.join(work, 'loc.txt'))}:fontsize=18:fontcolor=white:x=24:y=h-48`,
+  ].join(',');
 
   execFileSync('ffmpeg', [
-    '-y', '-threads', '1', '-loop', '1', '-framerate', '24', '-t', String(duration), '-i', imagePath, '-i', audioPath,
-    '-filter_complex', filter, '-map', '[v]', '-map', '1:a', '-r', '24', '-c:v', 'libx264', '-preset', 'ultrafast',
-    '-tune', 'stillimage', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '96k', '-b:v', '700k', '-shortest', outFile,
+    '-y',
+    '-threads', '1',
+    '-loop', '1',
+    '-framerate', String(FPS),
+    '-t', String(duration),
+    '-i', imagePath,
+    '-i', audioPath,
+    '-filter_complex', `[0:v]${preZoom}[v]`,
+    '-map', '[v]',
+    '-map', '1:a',
+    '-r', String(FPS),
+    '-c:v', 'libx264',
+    '-preset', 'ultrafast',
+    '-tune', 'stillimage',
+    '-pix_fmt', 'yuv420p',
+    '-c:a', 'aac',
+    '-b:a', '96k',
+    '-b:v', '900k',
+    '-shortest',
+    outFile,
   ], { stdio: 'ignore' });
 }
 
@@ -165,6 +356,7 @@ async function uploadVideo(filePath, order, locale, lesson) {
   const result = await put(blobPath, buffer, {
     access: 'public',
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: 'video/mp4',
   });
   return result.url;
@@ -191,8 +383,9 @@ async function main() {
       const videoPath = path.join(OUT_DIR, `${base}.mp4`);
       const alreadyMapped = typeof map[locale] === 'string' && map[locale];
       const localReady = fs.existsSync(videoPath) && fs.statSync(videoPath).size > 100000;
+      const c = coords(lesson);
 
-      console.log(`Lesson ${lesson.order} ${locale}: start`);
+      console.log(`Lesson ${lesson.order} ${locale}: start (${c.screenshot}) -> x:${c.x2}, y:${c.y2}`);
 
       if (!alreadyMapped || FORCE_REGENERATE) {
         if (!UPLOAD_ONLY && (!localReady || FORCE_REGENERATE)) {
