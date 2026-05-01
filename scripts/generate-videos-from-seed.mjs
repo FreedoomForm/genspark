@@ -497,7 +497,7 @@ function writeText(file, text) {
 }
 
 function synthesize(text, locale, outFile) {
-  const voice = locale === 'ru' ? 'ru-RU-DmitryNeural' : 'uz-UZ-SardorNeural';
+  const voice = locale === 'ru' ? 'ru-RU-SvetlanaNeural' : 'uz-UZ-SardorNeural';
   const rate = locale === 'ru' ? '-8%' : '-10%';
   execFileSync(EDGE_TTS_BIN, ['--voice', voice, `--rate=${rate}`, '--text', text, '--write-media', outFile], { stdio: 'ignore' });
 }
