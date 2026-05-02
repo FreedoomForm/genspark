@@ -16,7 +16,7 @@ model User {
   role      String   @default("USER")
   createdAt DateTime @default(now())
 
-  attempts       Attempt[]
+  attempt        Attempt?
   lessonProgress LessonProgress[]
 
   @@map("users")
@@ -37,12 +37,13 @@ model Question {
 
 model Attempt {
   id             String    @id @default(cuid())
-  userId         String
+  userId         String    @unique
   questionIds    String
   optionsShuffle String?
   correctCount   Int       @default(0)
   incorrectCount Int       @default(0)
   totalCount     Int       @default(20)
+  startedAt      DateTime?
   finishedAt     DateTime?
   createdAt      DateTime  @default(now())
 
