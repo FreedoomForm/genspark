@@ -59,27 +59,76 @@ jobs:
       - name: Run video generation script
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
           FROM: ${{ github.event.inputs.from || '1' }}
           TO: ${{ github.event.inputs.to || '200' }}
           FORCE_REGENERATE: ${{ github.event.inputs.force_regenerate || '0' }}
           LOCALES: ${{ github.event.inputs.locales || 'ru,uz' }}
-        run: node scripts/generate-videos-from-seed.mjs
+        run: node scripts/generate-videos-local.mjs
 
-      - name: Upload generated videos as artifacts
-        if: always()
+      - name: List generated videos
+        run: |
+          echo "=== Generated videos ==="
+          ls -la public/generated-videos/
+          echo ""
+          echo "Total size:"
+          du -sh public/generated-videos/
+
+      - name: Upload videos as artifacts (backup)
         uses: actions/upload-artifact@v4
         with:
           name: generated-videos
           path: public/generated-videos/
           retention-days: 7
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
-      - name: Commit database updates (if any)
-        if: success()
+  create-release:
+    needs: generate-videos
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download videos artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-videos
+          path: public/generated-videos/
+
+      - name: List videos to upload
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: update lesson video URLs"
-          git push
+          echo "=== Videos to upload to GitHub Release ==="
+          ls -la public/generated-videos/
+          echo ""
+          VIDEO_COUNT=$(ls public/generated-videos/*.mp4 2>/dev/null | wc -l)
+          echo "Total videos: $VIDEO_COUNT"
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Check if release exists
+          if gh release view lesson-videos --repo ${{ github.repository }} > /dev/null 2>&1; then
+            echo "Release exists, deleting and recreating..."
+            gh release delete lesson-videos --yes --repo ${{ github.repository }}
+          fi
+          
+          # Create new release with all videos
+          echo "Creating release with videos..."
+          gh release create lesson-videos \
+            --repo ${{ github.repository }} \
+            --title "Lesson Videos" \
+            --notes "Auto-generated lesson tutorial videos with cursor animation and TTS narration." \
+            public/generated-videos/*.mp4
+          
+          echo ""
+          echo "=== Release created successfully! ==="
+          echo "Videos are now available at:"
+          echo "https://github.com/${{ github.repository }}/releases/tag/lesson-videos"
+
+      - name: Verify release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "=== Release info ==="
+          gh release view lesson-videos --repo ${{ github.repository }}
