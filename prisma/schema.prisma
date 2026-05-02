@@ -1138,3 +1138,71 @@ model Lesson {
 
   @@map("lessons")
 }
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+
+  attempts        Attempt[]
+  lessonProgress  LessonProgress[]
+
+  @@map("users")
+}
+
+model Question {
+  id         Int     @id @default(autoincrement())
+  category   String
+  screenshot String?
+  ruQuestion String
+  ruOptions  String
+  uzQuestion String
+  uzOptions  String
+  correct    Int
+
+  @@map("questions")
+}
+
+model Attempt {
+  id              String    @id @default(cuid())
+  userId          String
+  questionIds     String
+  optionsShuffle  String?
+  correctCount    Int       @default(0)
+  incorrectCount  Int       @default(0)
+  totalCount      Int       @default(20)
+  finishedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@map("attempts")
+}
+
+model Answer {
+  attemptId   String
+  questionId  Int
+  selected    Int
+  isCorrect   Boolean
+
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@id([attemptId, questionId])
+  @@map("answers")
+}
+
+model LessonProgress {
+  userId    String
+  lessonId  String
+  viewedAt  DateTime @default(now())
+  completed Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonId])
+  @@map("lesson_progress")
+}
