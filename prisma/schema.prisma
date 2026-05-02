@@ -94,6 +94,7 @@ model Lesson {
 
   @@index([category])
   @@index([order])
+  @@map("lesson")
 }
 
 // Track which lessons each user has viewed/completed
