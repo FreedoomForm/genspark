@@ -1,0 +1,151 @@
+name: Release Lesson Videos
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      dry_run:
+        description: 'Dry run (only print URLs, do not upload)'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: List videos to upload
+        id: list-videos
+        run: |
+          echo "=== Videos in public/generated-videos ==="
+          if [ -d "public/generated-videos" ]; then
+            find public/generated-videos -name "*.mp4" -type f | sort
+            echo "count=$(find public/generated-videos -name '*.mp4' -type f | wc -l)" >> $GITHUB_OUTPUT
+          else
+            echo "No videos directory found"
+            echo "count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create release
+        if: steps.list-videos.outputs.count != '0' && inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if release exists
+          if gh release view ${{ inputs.version }} 2>/dev/null; then
+            echo "Release ${{ inputs.version }} already exists, will update assets"
+          else
+            echo "Creating release ${{ inputs.version }}..."
+            gh release create ${{ inputs.version }} \
+              --title "Lesson Videos ${{ inputs.version }}" \
+              --notes "Automated release of lesson videos for Lume Admin training"
+          fi
+
+      - name: Upload videos to release
+        if: steps.list-videos.outputs.count != '0' && inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for video in public/generated-videos/*.mp4; do
+            if [ -f "$video" ]; then
+              filename=$(basename "$video")
+              echo "Uploading $filename..."
+              gh release upload ${{ inputs.version }} "$video" --clobber || echo "Warning: Failed to upload $filename"
+            fi
+          done
+
+      - name: Generate GitHub Release URLs
+        id: generate-urls
+        run: |
+          echo "=== GitHub Release URLs ==="
+          echo "Base URL: https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}/"
+          echo ""
+          echo "Sample URLs:"
+          for video in public/generated-videos/*.mp4; do
+            if [ -f "$video" ]; then
+              filename=$(basename "$video")
+              echo "https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}/$filename"
+            fi
+          done | head -10
+
+      - name: Update database video URLs
+        if: inputs.dry_run != 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          # Install dependencies for the update script
+          npm install @prisma/client
+
+          # Create update script
+          cat > update-video-urls.mjs << 'EOF'
+          import { PrismaClient } from '@prisma/client';
+
+          const prisma = new PrismaClient();
+          const BASE_URL = 'https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}';
+
+          async function main() {
+            const lessons = await prisma.lesson.findMany({ orderBy: { order: 'asc' } });
+            console.log(`Updating ${lessons.length} lessons...`);
+
+            for (const lesson of lessons) {
+              const orderStr = String(lesson.order).padStart(3, '0');
+              const ruUrl = `${BASE_URL}/${orderStr}-ru-lesson.mp4`;
+
+              // Find matching Uzbek video file
+              const fs = await import('fs');
+              const files = fs.readdirSync('public/generated-videos');
+              const uzFile = files.find(f =>
+                f.startsWith(orderStr + '-uz-') && f.endsWith('.mp4')
+              );
+              const uzUrl = uzFile ? `${BASE_URL}/${uzFile}` : null;
+
+              const videoMap = {
+                ru: ruUrl,
+                uz: uzUrl,
+                default: ruUrl
+              };
+
+              await prisma.lesson.update({
+                where: { id: lesson.id },
+                data: { videoUrl: JSON.stringify(videoMap) }
+              });
+
+              console.log(`Updated lesson ${lesson.order}: ${lesson.ruName}`);
+            }
+
+            console.log('Done!');
+          }
+
+          main()
+            .catch(console.error)
+            .finally(() => prisma.$disconnect());
+          EOF
+
+          node update-video-urls.mjs
+
+      - name: Summary
+        run: |
+          echo "### Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Videos uploaded:** ${{ steps.list-videos.outputs.count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry run:** ${{ inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Video URLs are now using GitHub Releases:" >> $GITHUB_STEP_SUMMARY
+          echo "\`https://github.com/${{ github.repository }}/releases/download/${{ inputs.version }}/XXX-ru-lesson.mp4\`" >> $GITHUB_STEP_SUMMARY
