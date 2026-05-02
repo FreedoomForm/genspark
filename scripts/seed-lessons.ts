@@ -1,7 +1,8 @@
 // 200 lessons about Lume Admin buttons and features
-// Run: npx ts-node scripts/seed-lessons.ts
+// Run: npx tsx scripts/seed-lessons.ts
 
 import { PrismaClient } from '@prisma/client';
+import { QUESTIONS } from '../lib/questions';
 
 const prisma = new PrismaClient();
 
@@ -277,32 +278,61 @@ async function main() {
   console.log('Starting seed...');
 
   try {
-    // Check if lessons already exist
-    const existingCount = await prisma.lesson.count();
+    // 1. Seed Lessons
+    const existingLessons = await prisma.lesson.count();
     
-    if (existingCount > 0) {
-      console.log(`Lessons already exist (${existingCount} records). Skipping seed.`);
-      console.log('Set FORCE_SEED=1 to force re-seed.');
-      
-      if (process.env.FORCE_SEED !== '1') {
-        return;
+    if (existingLessons > 0) {
+      console.log(`Lessons already exist (${existingLessons} records). Skipping.`);
+    } else {
+      console.log('Seeding lessons...');
+      for (const lesson of lessons) {
+        await prisma.lesson.create({ data: lesson });
       }
-      
-      console.log('FORCE_SEED=1, re-seeding...');
-      await prisma.lesson.deleteMany({});
-      console.log('Cleared existing lessons');
+      console.log(`Inserted ${lessons.length} lessons`);
     }
 
-    // Insert new lessons
-    for (const lesson of lessons) {
-      await prisma.lesson.create({ data: lesson });
+    // 2. Seed Questions
+    const existingQuestions = await prisma.question.count();
+    if (existingQuestions > 0) {
+      console.log(`Questions already exist (${existingQuestions} records). Skipping.`);
+    } else {
+      console.log('Seeding questions...');
+      const seedData = QUESTIONS.map(q => ({
+        id: q.id,
+        category: q.cat,
+        screenshot: q.shot || null,
+        ruQuestion: q.ru.q,
+        ruOptions: q.ru.opts,
+        uzQuestion: q.uz.q,
+        uzOptions: q.uz.opts,
+        correct: q.correct,
+      }));
+      await prisma.question.createMany({ data: seedData });
+      console.log(`Inserted ${seedData.length} questions`);
     }
 
-    console.log(`Inserted ${lessons.length} lessons`);
+    // 3. Seed Admin User
+    const adminExists = await prisma.user.findFirst({ where: { role: 'ADMIN' } });
+    if (adminExists) {
+      console.log('Admin user already exists.');
+    } else {
+      console.log('Creating default admin user...');
+      const bcrypt = await import('bcryptjs');
+      await prisma.user.create({
+        data: {
+          email: 'admin@lume.local',
+          name: 'Admin',
+          password: await bcrypt.hash('admin123', 10),
+          role: 'ADMIN',
+        },
+      });
+      console.log('Created admin: admin@lume.local / admin123');
+    }
+
+    console.log('Seed completed!');
   } catch (error) {
     console.error('Seed error:', error);
-    // Don't fail the build if seed fails
-    console.log('Continuing without seed...');
+    console.log('Continuing without full seed...');
   }
 }
 
