@@ -51,34 +51,6 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
-      - name: Push database schema
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          if [ -n "$DATABASE_URL" ]; then
-            echo "Pushing database schema..."
-            npx prisma db push --skip-generate
-            echo "Database schema synced!"
-          else
-            echo "DATABASE_URL not set, skipping db push"
-          fi
-
-      - name: Seed lessons if needed
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          if [ -n "$DATABASE_URL" ]; then
-            echo "Checking if lessons exist..."
-            LESSON_COUNT=$(npx prisma db execute --stdin <<< "SELECT COUNT(*) FROM lessons" 2>/dev/null || echo "0")
-            echo "Lesson count: $LESSON_COUNT"
-
-            # Run seed if no lessons
-            if [[ "$LESSON_COUNT" == *"0"* ]] || [[ -z "$LESSON_COUNT" ]]; then
-              echo "No lessons found, running seed..."
-              npx ts-node scripts/seed-lessons.ts || npx tsx scripts/seed-lessons.ts || echo "Seed failed, continuing anyway"
-            fi
-          fi
-
       - name: Create output directories
         run: |
           mkdir -p public/generated-videos
