@@ -1,0 +1,446 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --navy: #0f2147;
+  --blue: #1f3a78;
+  --accent: #3b82f6;
+  --green: #10b981;
+  --red: #ef4444;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: #111827;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  /* ========================================
+     BUTTONS - СИЛЬНЫЙ ЭФФЕКТ "ЛЕВИТАЦИИ"
+     ======================================== */
+  .btn { 
+    @apply inline-flex items-center justify-center rounded-full px-6 py-2.5 font-semibold transition-all duration-200;
+  }
+  .btn-primary { 
+    @apply btn bg-white/95 backdrop-blur-sm text-gray-600 border border-gray-200 
+           drop-shadow hover:drop-shadow-md hover:bg-gray-50 hover:text-gray-800 
+           active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed 
+           disabled:hover:scale-100 disabled:hover:drop-shadow; 
+  }
+  .btn-secondary { 
+    @apply btn bg-white/95 backdrop-blur-sm text-gray-600 border border-gray-200 
+           drop-shadow-sm hover:drop-shadow hover:bg-gray-50 hover:text-gray-800 active:scale-95; 
+  }
+  .btn-danger { 
+    @apply btn bg-white/95 backdrop-blur-sm text-red-500 border border-red-200 
+           drop-shadow-sm hover:drop-shadow hover:bg-red-50 hover:text-red-700 active:scale-95; 
+  }
+
+  /* Icon Buttons - круглые кнопки с иконками */
+  .icon-btn {
+    @apply inline-flex items-center justify-center rounded-full w-10 h-10
+           bg-white/95 backdrop-blur-sm border border-gray-200
+           transition-all duration-200 drop-shadow-sm hover:drop-shadow hover:scale-105 
+           active:scale-95 text-gray-600 hover:text-gray-800;
+  }
+  .icon-btn-sm {
+    @apply icon-btn w-8 h-8 text-sm;
+  }
+  .icon-btn-lg {
+    @apply icon-btn w-12 h-12 text-lg;
+  }
+
+  /* Toggle Buttons - кнопки-переключатели */
+  .toggle-btn {
+    @apply w-full bg-white/95 backdrop-blur-sm border border-gray-200 
+           drop-shadow-sm hover:drop-shadow
+           rounded-full p-3 flex items-center justify-between text-sm 
+           hover:bg-gray-50 transition-all duration-200;
+  }
+
+  /* Number Buttons - кнопки номеров уроков */
+  .number-btn {
+    @apply flex-shrink-0 w-9 h-9 rounded-full text-xs font-semibold 
+           transition-all duration-200 border
+           bg-white/95 backdrop-blur-sm drop-shadow-sm hover:drop-shadow;
+  }
+  .number-btn-active {
+    @apply number-btn border-gray-300 text-gray-700 scale-110 drop-shadow
+           hover:bg-gray-50 hover:drop-shadow-md;
+  }
+  .number-btn-viewed {
+    @apply number-btn border-gray-200 text-gray-600 
+           hover:bg-gray-50 hover:drop-shadow;
+  }
+  .number-btn-default {
+    @apply number-btn border-gray-200 text-gray-400 
+           hover:bg-gray-50 hover:text-gray-600 hover:drop-shadow;
+  }
+
+  /* Small Action Buttons */
+  .btn-sm {
+    @apply !py-1.5 !px-3 text-sm;
+  }
+
+  /* ========================================
+     INPUTS - СРЕДНИЙ ЭФФЕКТ
+     ======================================== */
+  .input { 
+    @apply w-full rounded-[2rem] border border-gray-200 bg-white/95 backdrop-blur-sm px-4 py-2.5 text-sm 
+           outline-none drop-shadow-sm transition-all duration-200
+           focus:drop-shadow focus:border-blue-300 focus:ring-2 focus:ring-blue-100
+           hover:drop-shadow; 
+  }
+  .input-sm {
+    @apply input py-2 px-3 text-xs;
+  }
+
+  /* Textarea */
+  textarea.input {
+    @apply min-h-[80px] resize-y;
+  }
+
+  /* Select - using regular CSS for SVG background */
+  select.input {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    background-position: right 0.75rem center;
+    padding-right: 2.5rem;
+  }
+
+  /* ========================================
+     CARDS - ЛЁГКИЙ ЭФФЕКТ
+     ======================================== */
+  .card { 
+    @apply rounded-[2rem] border border-gray-200 bg-white/95 backdrop-blur-sm 
+           drop-shadow-sm hover:drop-shadow transition-all duration-300 p-6; 
+  }
+  .card-sm {
+    @apply card p-4;
+  }
+  .card-lg {
+    @apply card p-8;
+  }
+
+  /* KPI Cards */
+  .kpi-card {
+    @apply card p-4 text-center;
+  }
+
+  /* Lesson Cards */
+  .lesson-card {
+    @apply card hover:scale-[1.01];
+  }
+
+  /* Question Cards */
+  .question-card {
+    @apply card;
+  }
+
+  /* Feature Cards */
+  .feature-card {
+    @apply card p-5 hover:scale-[1.02];
+  }
+
+  /* ========================================
+     BADGES - МИНИМАЛЬНЫЙ ЭФФЕКТ
+     ======================================== */
+  .badge { 
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium 
+           transition-all duration-200 drop-shadow-sm hover:drop-shadow; 
+  }
+  .badge-green { 
+    @apply badge bg-emerald-50 text-emerald-700 border border-emerald-200; 
+  }
+  .badge-red { 
+    @apply badge bg-red-50 text-red-700 border border-red-200; 
+  }
+  .badge-gray { 
+    @apply badge bg-gray-100 text-gray-700 border border-gray-200; 
+  }
+  .badge-amber { 
+    @apply badge bg-amber-50 text-amber-700 border border-amber-200; 
+  }
+  .badge-blue {
+    @apply badge bg-blue-50 text-blue-700 border border-blue-200;
+  }
+  .badge-purple {
+    @apply badge bg-purple-50 text-purple-700 border border-purple-200;
+  }
+
+  /* YouTube Badge */
+  .youtube-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full 
+           bg-red-50 text-red-600 border border-red-200
+           drop-shadow-sm hover:drop-shadow transition-all;
+  }
+
+  /* Category Badge */
+  .category-badge {
+    @apply inline-block px-3 py-1 text-xs rounded-full 
+           bg-gray-50 text-gray-600 border border-gray-200
+           drop-shadow-sm hover:drop-shadow transition-all;
+  }
+
+  /* UI Location Badge */
+  .location-badge {
+    @apply inline-block px-3 py-1 text-sm rounded-full 
+           bg-purple-50 text-purple-700 border border-purple-200
+           drop-shadow-sm hover:drop-shadow transition-all;
+  }
+
+  /* ========================================
+     LABELS
+     ======================================== */
+  .label { 
+    @apply block text-sm font-medium text-gray-700 mb-1.5 transition-colors hover:text-gray-800; 
+  }
+
+  /* ========================================
+     MODALS
+     ======================================== */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+  }
+  .modal-content {
+    @apply bg-white/95 backdrop-blur-sm rounded-[2rem] drop-shadow-xl border border-gray-100 
+           max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+  }
+  .modal-close {
+    @apply absolute top-3 right-3 z-10 w-8 h-8 rounded-full
+           bg-white/90 backdrop-blur-sm border border-gray-200
+           text-gray-500 hover:text-gray-800 transition-all 
+           drop-shadow-sm hover:drop-shadow hover:scale-110
+           flex items-center justify-center;
+  }
+
+  /* ========================================
+     PROGRESS BARS
+     ======================================== */
+  .progress-bar {
+    @apply h-2 w-full rounded-full bg-gray-100 overflow-hidden drop-shadow-inner;
+  }
+  .progress-fill {
+    @apply h-full transition-all duration-500 ease-out;
+  }
+
+  /* ========================================
+     TABLES
+     ======================================== */
+  .table-container {
+    @apply overflow-hidden rounded-[2rem] border border-gray-200 bg-white drop-shadow-sm;
+  }
+  .table-header {
+    @apply bg-gray-50/80 backdrop-blur-sm text-left text-xs uppercase tracking-wider text-gray-500;
+  }
+  .table-row {
+    @apply hover:bg-gray-50/50 transition-colors;
+  }
+
+  /* ========================================
+     NAVIGATION
+     ======================================== */
+  .nav-link {
+    @apply text-gray-600 hover:text-gray-900 transition-colors duration-200 
+           hover:drop-shadow-sm;
+  }
+  .nav-button {
+    @apply inline-flex items-center justify-center rounded-full px-4 py-2 
+           transition-all duration-200 drop-shadow-sm hover:drop-shadow;
+  }
+
+  /* Language Toggle */
+  .lang-toggle {
+    @apply inline-flex rounded-full border border-gray-200 bg-white/95 backdrop-blur-sm 
+           p-0.5 text-xs drop-shadow-sm;
+  }
+  .lang-toggle-btn {
+    @apply px-2.5 py-1 rounded-full transition-all duration-200;
+  }
+  .lang-toggle-btn-active {
+    @apply bg-lume-navy text-white drop-shadow-sm;
+  }
+  .lang-toggle-btn-inactive {
+    @apply text-gray-600 hover:text-gray-800;
+  }
+
+  /* Logo Container */
+  .logo-container {
+    @apply flex h-8 w-8 items-center justify-center rounded-2xl 
+           bg-lume-navy text-white font-bold
+           drop-shadow-sm hover:drop-shadow transition-all;
+  }
+
+  /* ========================================
+     ALERTS/ERRORS
+     ======================================== */
+  .alert-error {
+    @apply rounded-[2rem] bg-red-50/90 backdrop-blur-sm px-4 py-3 text-sm text-red-700 
+           border border-red-200 drop-shadow-sm;
+  }
+  .alert-success {
+    @apply rounded-[2rem] bg-emerald-50/90 backdrop-blur-sm px-4 py-3 text-sm text-emerald-700 
+           border border-emerald-200 drop-shadow-sm;
+  }
+  .alert-warning {
+    @apply rounded-[2rem] bg-amber-50/90 backdrop-blur-sm px-4 py-3 text-sm text-amber-700 
+           border border-amber-200 drop-shadow-sm;
+  }
+
+  /* ========================================
+     SECTION HEADERS
+     ======================================== */
+  .section-header {
+    @apply text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3;
+  }
+
+  /* ========================================
+     ZOOM CONTROLS
+     ======================================== */
+  .zoom-controls {
+    @apply absolute bottom-3 left-1/2 -translate-x-1/2 z-10 
+           flex items-center gap-2 
+           bg-white/90 backdrop-blur-sm rounded-full 
+           drop-shadow-lg px-3 py-1.5;
+  }
+  .zoom-btn {
+    @apply w-8 h-8 rounded-full flex items-center justify-center 
+           text-gray-600 hover:bg-gray-100 
+           disabled:opacity-40 disabled:cursor-not-allowed 
+           transition-all drop-shadow-sm hover:drop-shadow;
+  }
+  .zoom-indicator {
+    @apply text-sm font-semibold text-gray-700 min-w-[3rem] text-center;
+  }
+
+  /* ========================================
+     SCREENSHOT FRAMES
+     ======================================== */
+  .shot-frame {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .shot-frame:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,.1);
+    transform: scale(1.01);
+  }
+  .shot-frame img { display: block; width: 100%; height: auto; }
+
+  /* ========================================
+     STAT BOXES (Test counters)
+     ======================================== */
+  .stat-box {
+    @apply card p-3 text-center;
+  }
+  .stat-box-correct {
+    @apply rounded-[2rem] bg-emerald-50/90 backdrop-blur-sm p-4 
+           border border-emerald-200 drop-shadow-sm;
+  }
+  .stat-box-incorrect {
+    @apply rounded-[2rem] bg-red-50/90 backdrop-blur-sm p-4 
+           border border-red-200 drop-shadow-sm;
+  }
+
+  /* ========================================
+     QUESTION OPTIONS
+     ======================================== */
+  .question-option {
+    @apply w-full rounded-[2rem] border px-4 py-3 text-left text-sm 
+           transition-all duration-200
+           drop-shadow-sm hover:drop-shadow;
+  }
+  .question-option-selected {
+    @apply border-blue-300 bg-blue-50 text-gray-800 drop-shadow;
+  }
+  .question-option-correct {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800;
+  }
+  .question-option-wrong {
+    @apply border-red-300 bg-red-50 text-red-800;
+  }
+  .question-option-default {
+    @apply border-gray-200 bg-white hover:bg-gray-50;
+  }
+
+  /* Option letter badge */
+  .option-letter {
+    @apply mr-2 inline-flex h-6 w-6 items-center justify-center 
+           rounded-full bg-gray-100 text-xs font-bold text-gray-600;
+  }
+
+  /* ========================================
+     DRAG HANDLE
+     ======================================== */
+  .drag-handle {
+    @apply flex-shrink-0 w-8 h-8 rounded-full 
+           bg-gray-100 text-gray-400 text-sm font-bold 
+           flex items-center justify-center 
+           cursor-grab active:cursor-grabbing
+           drop-shadow-sm hover:drop-shadow hover:bg-gray-200
+           transition-all;
+  }
+
+  /* ========================================
+     HERO BADGE
+     ======================================== */
+  .hero-badge {
+    @apply inline-flex items-center gap-2 rounded-full 
+           bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700
+           border border-blue-200
+           drop-shadow-sm hover:drop-shadow transition-all;
+  }
+  .hero-badge-dot {
+    @apply h-1.5 w-1.5 rounded-full bg-blue-500;
+  }
+
+  /* ========================================
+     FEATURE GRID CARDS
+     ======================================== */
+  .feature-grid-item {
+    @apply rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2
+           drop-shadow-sm hover:drop-shadow hover:bg-white
+           transition-all;
+  }
+}
+
+/* ========================================
+   SCROLLBAR STYLING
+   ======================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* ========================================
+   DROP SHADOW INNER UTILITY
+   ======================================== */
+.drop-shadow-inner {
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
