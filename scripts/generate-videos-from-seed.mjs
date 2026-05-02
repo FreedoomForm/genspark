@@ -111,10 +111,20 @@ function screenshotFor(lesson) {
 }
 
 function narration(lesson, locale) {
+  // Limit text to avoid TTS failures (max ~500 chars)
+  const MAX_DESC = 150;
+  const MAX_FUNC = 150;
+  
   if (locale === 'ru') {
-    return `Урок ${lesson.order}. ${lesson.ruName}. ${lesson.ruDescription || ''}. ${lesson.ruFunctionality || ''}. Расположение в интерфейсе: ${lesson.uiLocation || ''}.`;
+    const desc = (lesson.ruDescription || '').substring(0, MAX_DESC);
+    const func = (lesson.ruFunctionality || '').substring(0, MAX_FUNC);
+    const text = `Урок ${lesson.order}. ${lesson.ruName}. ${desc}. ${func}. Расположение: ${lesson.uiLocation || ''}.`;
+    return text.substring(0, 500);
   }
-  return `${lesson.order}-dars. ${lesson.uzName}. ${lesson.uzDescription || ''}. ${lesson.uzFunctionality || ''}. Interfeysdagi joylashuvi: ${lesson.uiLocation || ''}.`;
+  const desc = (lesson.uzDescription || '').substring(0, MAX_DESC);
+  const func = (lesson.uzFunctionality || '').substring(0, MAX_FUNC);
+  const text = `${lesson.order}-dars. ${lesson.uzName}. ${desc}. ${func}. Joylashuvi: ${lesson.uiLocation || ''}.`;
+  return text.substring(0, 500);
 }
 
 // Real coordinates from VLM analysis (converted from % to pixels, WIDTH=854, HEIGHT=480)
@@ -499,7 +509,27 @@ function writeText(file, text) {
 function synthesize(text, locale, outFile) {
   const voice = locale === 'ru' ? 'ru-RU-SvetlanaNeural' : 'uz-UZ-SardorNeural';
   const rate = locale === 'ru' ? '-8%' : '-10%';
-  execFileSync(EDGE_TTS_BIN, ['--voice', voice, `--rate=${rate}`, '--text', text, '--write-media', outFile], { stdio: 'ignore' });
+  
+  try {
+    execFileSync(EDGE_TTS_BIN, ['--voice', voice, `--rate=${rate}`, '--text', text, '--write-media', outFile], { 
+      stdio: 'ignore',
+      timeout: 60000 // 60 second timeout
+    });
+  } catch (error) {
+    console.log(`TTS failed for ${locale}, trying shorter text...`);
+    // Try with shorter text (just name)
+    const shortText = text.split('.')[0] + '.';
+    try {
+      execFileSync(EDGE_TTS_BIN, ['--voice', voice, `--rate=${rate}`, '--text', shortText, '--write-media', outFile], { 
+        stdio: 'ignore',
+        timeout: 30000 
+      });
+    } catch (error2) {
+      console.log(`TTS still failed, creating silent audio...`);
+      // Create silent audio as fallback
+      execFileSync('ffmpeg', ['-y', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-t', '6', outFile], { stdio: 'ignore' });
+    }
+  }
 }
 
 function makeVideo(lesson, locale, imagePath, audioPath, outFile) {
