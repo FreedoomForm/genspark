@@ -57,7 +57,7 @@ jobs:
         run: |
           if [ -n "$DATABASE_URL" ]; then
             echo "Syncing database schema (creates missing tables only, does NOT delete data)..."
-            npx prisma db push --skip-generate || echo "Warning: db push failed, continuing anyway"
+            npx prisma db push --skip-generate
           else
             echo "DATABASE_URL not set"
             exit 1
