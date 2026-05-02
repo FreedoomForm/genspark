@@ -173,22 +173,10 @@ function makeVideo(imagePath, audioPath, outFile, title) {
   const imgRatio = imgDim.width / imgDim.height;
   const targetRatio = WIDTH / HEIGHT; // 16:9 = 1.777...
   
-  let scaleFilter;
-  
-  if (Math.abs(imgRatio - targetRatio) < 0.01) {
-    // Already 16:9 - just scale to target size
-    scaleFilter = `scale=${WIDTH}:${HEIGHT}`;
-  } else if (imgRatio > targetRatio) {
-    // Wider than 16:9 - fit width, add bars top/bottom
-    scaleFilter = `scale=${WIDTH}:-2,pad=${WIDTH}:${HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=white`;
-  } else {
-    // Taller than 16:9 - fit height, add bars left/right (or crop)
-    // Option 1: Add bars
-    // scaleFilter = `scale=-2:${HEIGHT},pad=${WIDTH}:${HEIGHT}:(ow-iw)/2:(oh-ih)/2:color=white`;
-    
-    // Option 2: Scale to fill and crop (zoom effect)
-    scaleFilter = `scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT}`;
-  }
+  // Always fill 16:9 - zoom and crop if needed (no black/white bars)
+  // force_original_aspect_ratio=increase means: scale until it FILLS the target
+  // then crop the excess
+  const scaleFilter = `scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT}`;
   
   const args = [
     '-y',
@@ -212,7 +200,7 @@ function makeVideo(imagePath, audioPath, outFile, title) {
     outFile,
   ];
   
-  console.log(`    Image: ${imgDim.width}x${imgDim.height} (${imgRatio.toFixed(2)}), scale: ${scaleFilter.split(',')[0]}`);
+  console.log(`    Image: ${imgDim.width}x${imgDim.height} (${imgRatio.toFixed(2)}) -> 16:9 zoom`);
   execFileSync('ffmpeg', args, { stdio: 'ignore' });
 }
 
