@@ -9,7 +9,7 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "node --import tsx scripts/seed.ts"
+    "db:seed": "npx tsx scripts/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
