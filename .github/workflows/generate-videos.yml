@@ -57,7 +57,7 @@ jobs:
         run: |
           if [ -n "$DATABASE_URL" ]; then
             echo "Pushing database schema..."
-            npx prisma db push --accept-data-loss
+            npx prisma db push --skip-generate
             echo "Database schema synced!"
           else
             echo "DATABASE_URL not set, skipping db push"
