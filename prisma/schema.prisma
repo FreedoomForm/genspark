@@ -1115,3 +1115,26 @@ enum order_status_new {
   CANCELED
   FAILED
 }
+
+model Lesson {
+  id              String   @id @default(cuid())
+  order           Int      @unique
+  category        String
+  ruName          String
+  uzName          String
+  ruDescription   String
+  uzDescription   String
+  ruFunctionality String
+  uzFunctionality String
+  uiLocation      String
+  screenshot      String?
+  videoUrl        String?
+  clickX          Int?
+  clickY          Int?
+  zoomX           Int?
+  zoomY           Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("lessons")
+}
