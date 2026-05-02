@@ -43,6 +43,11 @@ export function isYouTubeUrl(url: string | null | undefined): boolean {
   return /(?:youtube\.com|youtu\.be)/i.test(url);
 }
 
+export function isGitHubReleaseUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return /github\.com\/.*\/releases\/download\//i.test(url);
+}
+
 export function buildYouTubeEmbedUrl(url: string, autoplay = false): string {
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
@@ -57,4 +62,24 @@ export function buildYouTubeEmbedUrl(url: string, autoplay = false): string {
   }
 
   return url;
+}
+
+// Get video source - handles GitHub Releases, YouTube, and direct URLs
+export function getVideoSource(url: string | null | undefined): {
+  type: 'youtube' | 'github-release' | 'direct' | 'none';
+  url: string | null;
+} {
+  if (!url) {
+    return { type: 'none', url: null };
+  }
+
+  if (isYouTubeUrl(url)) {
+    return { type: 'youtube', url: buildYouTubeEmbedUrl(url) };
+  }
+
+  if (isGitHubReleaseUrl(url)) {
+    return { type: 'github-release', url };
+  }
+
+  return { type: 'direct', url };
 }
