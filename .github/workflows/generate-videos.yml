@@ -56,6 +56,10 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if [ -n "$DATABASE_URL" ]; then
+            echo "Cleaning orphaned LessonProgress records (references to non-existent lessons)..."
+            npx prisma db execute --stdin << 'SQL'
+            DELETE FROM "LessonProgress" WHERE "lessonId" NOT IN (SELECT id FROM "lesson");
+            SQL
             echo "Syncing database schema (creates missing tables only, does NOT delete data)..."
             npx prisma db push --skip-generate
           else
