@@ -77,7 +77,7 @@ jobs:
           TO: ${{ github.event.inputs.to || '200' }}
           FORCE_REGENERATE: ${{ github.event.inputs.force_regenerate || '0' }}
           LOCALES: ${{ github.event.inputs.locales || 'ru,uz' }}
-        run: node scripts/generate-videos-local.mjs
+        run: node scripts/generate-videos-simple.mjs
 
       - name: List generated videos
         run: |
