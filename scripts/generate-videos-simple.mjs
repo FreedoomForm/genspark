@@ -42,6 +42,8 @@ function ffprobeDuration(file) {
 }
 
 function getScreenshot(lesson) {
+  const screenshotsDir = path.join(ROOT, 'public', 'screenshots');
+  
   // Check if screenshot exists in lesson data
   if (lesson.screenshot) {
     const screenshotPath = path.join(ROOT, 'public', lesson.screenshot);
@@ -50,21 +52,116 @@ function getScreenshot(lesson) {
     }
   }
   
-  // Check for screenshot in public/screenshots
-  const possiblePaths = [
-    path.join(ROOT, 'public', 'screenshots', `${String(lesson.order).padStart(3, '0')}.png`),
-    path.join(ROOT, 'public', 'screenshots', `${String(lesson.order).padStart(3, '0')}.jpg`),
-    path.join(ROOT, 'public', 'screenshots', `lesson-${lesson.order}.png`),
-    path.join(ROOT, 'public', 'screenshots', `lesson-${lesson.order}.jpg`),
+  // Keyword mapping for screenshots
+  const text = `${lesson.ruName || ''} ${lesson.uzName || ''} ${lesson.ruDescription || ''} ${lesson.category || ''}`.toLowerCase();
+  
+  const keywordMap = [
+    // Cabinet
+    [['главная', 'bosh sahifa', 'dashboard'], 'dashboard.png'],
+    [['баланс', 'balans'], 'balance.png'],
+    [['история входов', 'kirish tarixi'], 'login_page.png'],
+    [['уведомлен', 'bildirishnoma'], 'interface.png'],
+    [['удалить аккаунт', 'akkauntni o\'chirish'], 'interface.png'],
+    
+    // Warehouse
+    [['товар', 'tovar', 'продукт', 'mahsulot'], 'products.png'],
+    [['приход', 'kirim'], 'receipt.png'],
+    [['возврат', 'qaytar'], 'receipt_return.png'],
+    [['трансфер', 'transfer'], 'transfer.png'],
+    [['реализац', 'realizats'], 'realization.png'],
+    [['переоцен', 'qayta bahol'], 'reprice.png'],
+    [['инвентар', 'inventar'], 'inventory.png'],
+    [['списан', 'yozib'], 'writeoff.png'],
+    [['группиров', 'guruh'], 'grouping.png'],
+    [['весов', 'og\'irlik'], 'weighted_products.png'],
+    [['импорт', 'import'], 'import_products.png'],
+    [['техкарт', 'tex-kart'], 'tech_cards.png'],
+    [['изготов', 'ishlab chiqar'], 'manufacturing_act.png'],
+    
+    // Reference
+    [['персонал', 'personal', 'сотрудник'], 'personnel.png'],
+    [['водител', 'haydov'], 'drivers.png'],
+    [['смен', 'smena'], 'shifts.png'],
+    [['клиент', 'mijoz'], 'clients.png'],
+    [['контрагент', 'kontragent'], 'contractors.png'],
+    [['лояльн', 'sodiqlik'], 'loyalty.png'],
+    [['телеграм', 'telegram'], 'telegram_bot.png'],
+    [['подпис', 'obuna'], 'subscriptions.png'],
+    [['тариф', 'tarif'], 'tariffs.png'],
+    [['тег', 'tag', 'tеg'], 'tags.png'],
+    
+    // Finance
+    [['касс', 'kassa'], 'cash_registers.png'],
+    [['счет', 'hisob', 'accounts'], 'accounts.png'],
+    [['контроль оплат', 'to\'lovlarni nazorat'], 'payment_methods.png'],
+    [['взаиморасчет', 'o\'zaro hisob-kitob'], 'mutual_settlements.png'],
+    [['зарплат', 'oylik'], 'salary.png'],
+    
+    // Reports
+    [['продаж', 'savdo'], 'sales_report.png'],
+    [['abc', 'xyz'], 'abc_xyz_report.png'],
+    [['top продаж', 'top savdo'], 'top_sales.png'],
+    [['отчет по товар', 'mahsulot hisoboti'], 'product_report.png'],
+    [['материал', 'material'], 'material_report.png'],
+    [['z отчет', 'z hisobot'], 'z_reports.png'],
+    [['параметр', 'parametr'], 'params_report.png'],
+    [['движен', 'harakat'], 'no_movement.png'],
+    [['прибыль', 'foyda'], 'pl_report.png'],
+    
+    // Settings
+    [['данные компании', 'kompaniya'], 'company_data.png'],
+    [['интерфейс', 'interfeys'], 'interface.png'],
+    [['устройств', 'qurilma'], 'devices.png'],
+    [['ценник', 'yorliq'], 'pricetags.png'],
+    [['печать', 'chop'], 'print_pricetags.png'],
+    [['параметры', 'parametr'], 'parameters.png'],
+    [['чек', 'chek'], 'checks_settings.png'],
+    [['продажа чеков', 'chek sotish'], 'sold_checks.png'],
+    [['удаленные чеки', 'o\'chirilgan chek'], 'deleted_checks.png'],
+    [['возврат чеков', 'chek qaytar'], 'check_returns.png'],
+    [['промо', 'promo'], 'promotions.png'],
+    [['ценообразован', 'narx'], 'pricing.png'],
+    [['смс', 'sms'], 'sms_templates.png'],
+    [['рассылка', 'tarqat'], 'sms_blast.png'],
+    [['edo', 'эдо'], 'edo.png'],
+    [['маркиров', 'belgi'], 'marking_audit.png'],
+    [['документ', 'hujjat'], 'documents.png'],
+    [['избран', 'sevimli'], 'favorite_products.png'],
+    [['pending', 'kutilayotgan'], 'pending_checks.png'],
   ];
   
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) return p;
+  // Find matching screenshot
+  for (const [keywords, filename] of keywordMap) {
+    if (keywords.some(kw => text.includes(kw))) {
+      const filePath = path.join(screenshotsDir, filename);
+      if (fs.existsSync(filePath)) {
+        return filePath;
+      }
+    }
   }
   
-  // Fallback to placeholder
-  const placeholder = path.join(ROOT, 'public', 'placeholder.png');
-  if (fs.existsSync(placeholder)) return placeholder;
+  // Category fallback
+  const categoryMap = {
+    'cabinet': 'dashboard.png',
+    'warehouse': 'products.png',
+    'reference': 'personnel.png',
+    'finance': 'accounts.png',
+    'reports': 'sales_report.png',
+    'settings': 'interface.png',
+  };
+  
+  if (lesson.category && categoryMap[lesson.category]) {
+    const filePath = path.join(screenshotsDir, categoryMap[lesson.category]);
+    if (fs.existsSync(filePath)) {
+      return filePath;
+    }
+  }
+  
+  // Fallback to dashboard
+  const fallback = path.join(screenshotsDir, 'dashboard.png');
+  if (fs.existsSync(fallback)) {
+    return fallback;
+  }
   
   return null;
 }
