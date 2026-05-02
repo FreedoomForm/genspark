@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --accept-data-loss --skip-generate && next build",
+    "build": "prisma generate && prisma db push --accept-data-loss --skip-generate && tsx scripts/seed-lessons.ts && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "node --import tsx scripts/seed.ts"
+    "db:seed": "node --import tsx scripts/seed.ts",
+    "db:seed-lessons": "tsx scripts/seed-lessons.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

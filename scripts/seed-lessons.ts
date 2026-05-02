@@ -276,16 +276,34 @@ const lessons = [
 async function main() {
   console.log('Starting seed...');
 
-  // Clear existing lessons
-  await prisma.lesson.deleteMany({});
-  console.log('Cleared existing lessons');
+  try {
+    // Check if lessons already exist
+    const existingCount = await prisma.lesson.count();
+    
+    if (existingCount > 0) {
+      console.log(`Lessons already exist (${existingCount} records). Skipping seed.`);
+      console.log('Set FORCE_SEED=1 to force re-seed.');
+      
+      if (process.env.FORCE_SEED !== '1') {
+        return;
+      }
+      
+      console.log('FORCE_SEED=1, re-seeding...');
+      await prisma.lesson.deleteMany({});
+      console.log('Cleared existing lessons');
+    }
 
-  // Insert new lessons
-  for (const lesson of lessons) {
-    await prisma.lesson.create({ data: lesson });
+    // Insert new lessons
+    for (const lesson of lessons) {
+      await prisma.lesson.create({ data: lesson });
+    }
+
+    console.log(`Inserted ${lessons.length} lessons`);
+  } catch (error) {
+    console.error('Seed error:', error);
+    // Don't fail the build if seed fails
+    console.log('Continuing without seed...');
   }
-
-  console.log(`Inserted ${lessons.length} lessons`);
 }
 
 main()
