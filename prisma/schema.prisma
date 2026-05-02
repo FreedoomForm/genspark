@@ -85,6 +85,8 @@ model Lesson {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  progress LessonProgress[]
+
   @@map("lessons")
 }
 
@@ -94,7 +96,8 @@ model LessonProgress {
   viewedAt  DateTime @default(now())
   completed Boolean  @default(false)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@id([userId, lessonId])
   @@map("lesson_progress")
