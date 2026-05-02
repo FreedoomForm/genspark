@@ -37,3 +37,24 @@ next-env.d.ts
 # lesson video pipeline
 /.video-tmp/
 /public/generated-videos/*.mp4
+
+# Video temp files
+.video-tmp/
+.video-test/
+*.mp3
+
+# Test files
+check-*.mjs
+test-*.mjs
+generate-lesson-1.mjs
+frame_*.png
+*.mp4
+!public/screenshots/*.png
+
+# Env files
+.env.blob
+.env.local
+
+# Generated videos (uploaded to GitHub Release)
+public/generated-videos/
+
