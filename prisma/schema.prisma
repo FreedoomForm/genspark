@@ -1154,13 +1154,13 @@ model User {
 }
 
 model Question {
-  id         Int     @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   category   String
   screenshot String?
   ruQuestion String
-  ruOptions  String
+  ruOptions  String[]
   uzQuestion String
-  uzOptions  String
+  uzOptions  String[]
   correct    Int
 
   @@map("questions")
