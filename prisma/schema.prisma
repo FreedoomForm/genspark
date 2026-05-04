@@ -15,7 +15,7 @@ model Answer {
   selected   Int
   isCorrect  Boolean
   answeredAt DateTime @default(now())
-  Attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionId])
 }
@@ -31,8 +31,8 @@ model Attempt {
   totalCount     Int       @default(20)
   ipAddress      String?
   optionsShuffle String?
-  Answer         Answer[]
-  User           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers        Answer[]
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([ipAddress, startedAt])
 }
@@ -72,7 +72,7 @@ model LessonProgress {
   viewedAt  DateTime @default(now())
   completed Boolean  @default(false)
   lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
   @@index([lessonId])
