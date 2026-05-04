@@ -9,19 +9,19 @@ datasource db {
 }
 
 model Answer {
-  id         String   @id @default(cuid())
+  id         String   @id
   attemptId  String
   questionId Int
   selected   Int
   isCorrect  Boolean
   answeredAt DateTime @default(now())
-  attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  Attempt    Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   @@unique([attemptId, questionId])
 }
 
 model Attempt {
-  id             String    @id @default(cuid())
+  id             String    @id
   userId         String    @unique
   questionIds    String
   startedAt      DateTime  @default(now())
@@ -31,14 +31,52 @@ model Attempt {
   totalCount     Int       @default(20)
   ipAddress      String?
   optionsShuffle String?
-  answers        Answer[]
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Answer         Answer[]
+  User           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([ipAddress, startedAt])
 }
 
-model Lesson {
-  id              String           @id @default(cuid())
+model LessonProgress {
+  id        String   @id
+  userId    String
+  lessonId  String
+  viewedAt  DateTime @default(now())
+  completed Boolean  @default(false)
+  lesson    lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([lessonId])
+  @@index([userId])
+}
+
+model Question {
+  id         Int      @id
+  category   String
+  screenshot String?
+  ruQuestion String
+  ruOptions  String[]
+  uzQuestion String
+  uzOptions  String[]
+  correct    Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+}
+
+model User {
+  id             String           @id
+  email          String           @unique
+  name           String
+  password       String
+  role           Role             @default(USER)
+  createdAt      DateTime         @default(now())
+  Attempt        Attempt?
+  LessonProgress LessonProgress[]
+}
+
+model lesson {
+  id              String           @id
   order           Int              @default(0)
   category        String
   screenshot      String?
@@ -57,50 +95,11 @@ model Lesson {
   uzUseCase       String?
   uiLocation      String?
   createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  progress        LessonProgress[]
+  updatedAt       DateTime
+  LessonProgress  LessonProgress[]
 
   @@index([category])
   @@index([order])
-  @@map("lesson")
-}
-
-model LessonProgress {
-  id        String   @id @default(cuid())
-  userId    String
-  lessonId  String
-  viewedAt  DateTime @default(now())
-  completed Boolean  @default(false)
-  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, lessonId])
-  @@index([lessonId])
-  @@index([userId])
-}
-
-model Question {
-  id         Int      @id
-  category   String
-  screenshot String?
-  ruQuestion String
-  ruOptions  String[]
-  uzQuestion String
-  uzOptions  String[]
-  correct    Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
-
-model User {
-  id             String           @id @default(cuid())
-  email          String           @unique
-  name           String
-  password       String
-  role           Role             @default(USER)
-  createdAt      DateTime         @default(now())
-  attempt        Attempt?
-  lessonProgress LessonProgress[]
 }
 
 enum Role {
