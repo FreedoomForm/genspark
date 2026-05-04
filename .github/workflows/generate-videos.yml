@@ -54,6 +54,7 @@ jobs:
       - name: Sync database schema (safe - only creates missing tables)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if [ -n "$DATABASE_URL" ]; then
             echo "Cleaning orphaned LessonProgress records..."
@@ -73,6 +74,7 @@ jobs:
       - name: Run video generation script
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
           FROM: ${{ github.event.inputs.from || '1' }}
           TO: ${{ github.event.inputs.to || '200' }}
           FORCE_REGENERATE: ${{ github.event.inputs.force_regenerate || '0' }}
