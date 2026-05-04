@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
         category: l.category,
         screenshot: l.screenshot,
         videoUrl: l.videoUrl,
+        videoUrlUz: l.videoUrlUz,
         ruName: l.ruName,
         uzName: l.uzName,
         ruDescription: l.ruDescription,
