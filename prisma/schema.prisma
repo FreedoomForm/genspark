@@ -81,6 +81,7 @@ model lesson {
   category        String
   screenshot      String?
   videoUrl        String?
+  videoUrlUz      String?
   ruName          String
   uzName          String
   ruDescription   String?
