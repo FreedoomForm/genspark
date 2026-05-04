@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Answer {
-  id         String   @id
+  id         String   @id @default(cuid())
   attemptId  String
   questionId Int
   selected   Int
@@ -21,7 +21,7 @@ model Answer {
 }
 
 model Attempt {
-  id             String    @id
+  id             String    @id @default(cuid())
   userId         String    @unique
   questionIds    String
   startedAt      DateTime  @default(now())
@@ -66,7 +66,7 @@ model Lesson {
 }
 
 model LessonProgress {
-  id        String   @id
+  id        String   @id @default(cuid())
   userId    String
   lessonId  String
   viewedAt  DateTime @default(now())
@@ -93,7 +93,7 @@ model Question {
 }
 
 model User {
-  id             String           @id
+  id             String           @id @default(cuid())
   email          String           @unique
   name           String
   password       String
