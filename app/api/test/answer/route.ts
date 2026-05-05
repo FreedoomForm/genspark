@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     const updated = await prisma.$transaction(async (tx) => {
       await tx.answer.create({
         data: {
+          id: `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 9)}`,
           attemptId: attempt.id,
           questionId: parsed.questionId,
           selected: parsed.selected, // Store the shuffled index (what user saw)
