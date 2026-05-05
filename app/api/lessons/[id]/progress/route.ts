@@ -32,6 +32,7 @@ export async function POST(
         completed: completed ?? true,
       },
       create: {
+        id: `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 9)}`,
         userId: session.sub,
         lessonId: id,
         completed: completed ?? true,
