@@ -282,7 +282,13 @@ async function main() {
 
   // Insert new lessons
   for (const lesson of lessons) {
-    await prisma.lesson.create({ data: lesson });
+    await prisma.lesson.create({
+      data: {
+        id: `l${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 9)}`,
+        ...lesson,
+        updatedAt: new Date(),
+      }
+    });
   }
 
   console.log(`Inserted ${lessons.length} lessons`);
