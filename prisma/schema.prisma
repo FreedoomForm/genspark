@@ -37,41 +37,13 @@ model Attempt {
   @@index([ipAddress, startedAt])
 }
 
-model Lesson {
-  id              String           @id @default(cuid())
-  order           Int              @default(0)
-  category        String
-  screenshot      String?
-  videoUrl        String?
-  ruName          String
-  uzName          String
-  ruDescription   String?
-  uzDescription   String?
-  ruFunctionality String?
-  uzFunctionality String?
-  ruSteps         String?
-  uzSteps         String?
-  ruTips          String?
-  uzTips          String?
-  ruUseCase       String?
-  uzUseCase       String?
-  uiLocation      String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  progress        LessonProgress[]
-
-  @@index([category])
-  @@index([order])
-  @@map("lesson")
-}
-
 model LessonProgress {
   id        String   @id
   userId    String
   lessonId  String
   viewedAt  DateTime @default(now())
   completed Boolean  @default(false)
-  lesson    Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson    lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
@@ -89,18 +61,45 @@ model Question {
   uzOptions  String[]
   correct    Int
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime
 }
 
 model User {
-  id             String           @id @default(cuid())
+  id             String           @id
   email          String           @unique
   name           String
   password       String
   role           Role             @default(USER)
   createdAt      DateTime         @default(now())
-  attempt        Attempt?
-  lessonProgress LessonProgress[]
+  Attempt        Attempt?
+  LessonProgress LessonProgress[]
+}
+
+model lesson {
+  id              String           @id
+  order           Int              @default(0)
+  category        String
+  screenshot      String?
+  videoUrl        String?
+  ruName          String
+  uzName          String
+  ruDescription   String?
+  uzDescription   String?
+  uiLocation      String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime
+  ruFunctionality String?
+  ruSteps         String?
+  ruTips          String?
+  ruUseCase       String?
+  uzFunctionality String?
+  uzSteps         String?
+  uzTips          String?
+  uzUseCase       String?
+  LessonProgress  LessonProgress[]
+
+  @@index([category])
+  @@index([order])
 }
 
 enum Role {
