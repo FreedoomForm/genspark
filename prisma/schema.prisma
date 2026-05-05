@@ -76,7 +76,7 @@ model User {
 }
 
 model lesson {
-  id              String           @id
+  id              String           @id @default(cuid())
   order           Int              @default(0)
   category        String
   screenshot      String?
@@ -87,7 +87,7 @@ model lesson {
   uzDescription   String?
   uiLocation      String?
   createdAt       DateTime         @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime         @updatedAt
   ruFunctionality String?
   ruSteps         String?
   ruTips          String?
