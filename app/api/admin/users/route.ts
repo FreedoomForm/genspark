@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       where,
       orderBy: { createdAt: 'desc' },
       include: {
-        attempt: true,
+        Attempt: true,
         _count: {
           select: { LessonProgress: true },
         },
@@ -64,13 +64,13 @@ export async function GET(req: NextRequest) {
         name: u.name,
         email: u.email,
         createdAt: u.createdAt,
-        attempt: u.attempt
+        attempt: u.Attempt
           ? {
-              correctCount: u.attempt.correctCount,
-              incorrectCount: u.attempt.incorrectCount,
-              totalCount: u.attempt.totalCount,
-              startedAt: u.attempt.startedAt,
-              finishedAt: u.attempt.finishedAt,
+              correctCount: u.Attempt.correctCount,
+              incorrectCount: u.Attempt.incorrectCount,
+              totalCount: u.Attempt.totalCount,
+              startedAt: u.Attempt.startedAt,
+              finishedAt: u.Attempt.finishedAt,
             }
           : null,
         lessonsViewed: u._count.LessonProgress,
