@@ -5,6 +5,10 @@ import { createSession, hashPassword } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
+function generateId(): string {
+  return 'c' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 const Body = z.object({
   email: z.string().email(),
   name: z.string().min(2).max(80),
@@ -26,6 +30,7 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
+        id: generateId(),
         email,
         name: parsed.name.trim(),
         password: await hashPassword(parsed.password),

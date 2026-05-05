@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
+function generateId(): string {
+  return 'c' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 // GET all lessons
 export async function GET() {
   try {
@@ -58,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     const lesson = await prisma.lesson.create({
       data: {
+        id: generateId(),
         order,
         category,
         screenshot,
@@ -69,6 +74,7 @@ export async function POST(request: NextRequest) {
         ruFunctionality,
         uzFunctionality,
         uiLocation,
+        updatedAt: new Date(),
       },
     });
 
