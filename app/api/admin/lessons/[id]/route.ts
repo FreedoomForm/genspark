@@ -44,6 +44,7 @@ export async function PUT(
         uzFunctionality,
         uiLocation,
         order,
+        updatedAt: new Date(),
       },
     });
 

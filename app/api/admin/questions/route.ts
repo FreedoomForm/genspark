@@ -28,6 +28,7 @@ export async function GET() {
         uzQuestion: q.uz.q,
         uzOptions: q.uz.opts,
         correct: q.correct,
+        updatedAt: new Date(),
       }));
 
       await prisma.question.createMany({ data: seedData });
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
           uzQuestion: q.uzQuestion,
           uzOptions: q.uzOptions,
           correct: q.correct,
+          updatedAt: new Date(),
         },
         create: {
           id: q.id,
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest) {
           uzQuestion: q.uzQuestion,
           uzOptions: q.uzOptions,
           correct: q.correct,
+          updatedAt: new Date(),
         },
       });
     }
