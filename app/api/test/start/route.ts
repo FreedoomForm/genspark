@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
 
     const attempt = await prisma.attempt.create({
       data: {
+        id: `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 9)}`,
         userId: session.sub,
         questionIds: JSON.stringify(ids),
         optionsShuffle: JSON.stringify(optionsShuffle),
