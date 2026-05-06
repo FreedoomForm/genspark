@@ -10,7 +10,7 @@ const OUT_DIR = path.join(ROOT, 'public', 'generated-videos');
 const TMP_DIR = path.join(ROOT, '.video-tmp');
 const SCREENSHOTS_DIR = path.join(ROOT, 'public', 'screenshots');
 const FROM = Number(process.env.FROM || '1');
-const TO = Number(process.env.TO || '259');
+const TO = Number(process.env.TO || '183');
 const FORCE_REGENERATE = process.env.FORCE_REGENERATE === '1';
 const LOCALES = (process.env.LOCALES || 'ru,uz').split(',').map((s) => s.trim()).filter(Boolean);
 const EDGE_TTS_BIN = fs.existsSync('/usr/local/bin/edge-tts') ? '/usr/local/bin/edge-tts' : 'edge-tts';

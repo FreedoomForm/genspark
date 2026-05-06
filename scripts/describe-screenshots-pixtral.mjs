@@ -44,7 +44,7 @@ const RELEASE_TAG = process.env.SCREENSHOT_RELEASE_TAG || 'lume-screenshots';
 const SCREENSHOT_BASE_URL = `https://github.com/${REPOSITORY}/releases/download/${RELEASE_TAG}`;
 
 const FROM = Number(process.env.FROM || '1');
-const TO = Number(process.env.TO || '259');
+const TO = Number(process.env.TO || '183');
 const FORCE = process.env.FORCE === '1';
 const CONCURRENCY = Math.max(1, Number(process.env.PIXTRAL_CONCURRENCY || '2'));
 const RETRIES = Math.max(1, Number(process.env.PIXTRAL_RETRY || '3'));
