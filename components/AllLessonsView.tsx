@@ -349,7 +349,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                         >
                           <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 group-hover:ring-2 group-hover:ring-lume-purple transition-all">
                             <img
-                              src={`/${lesson.screenshot}`}
+                              src={lesson.screenshot.startsWith('http') ? lesson.screenshot : `/${lesson.screenshot}`}
                               alt={name}
                               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -487,7 +487,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                   />
                   {editingLesson.screenshot && (
                     <img
-                      src={`/${editingLesson.screenshot}`}
+                      src={editingLesson.screenshot.startsWith('http') ? editingLesson.screenshot : `/${editingLesson.screenshot}`}
                       alt="Preview"
                       className="mt-2 max-h-32 rounded border"
                     />
@@ -675,7 +675,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                       }}
                     >
                       <img
-                        src={`/${lightbox.src}`}
+                        src={lightbox.src.startsWith('http') ? lightbox.src : `/${lightbox.src}`}
                         alt={lightbox.title || 'Image'}
                         className="max-w-none transition-transform duration-200"
                         style={{

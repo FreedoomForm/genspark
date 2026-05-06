@@ -375,7 +375,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                 onClick={() => setLightbox({ type: 'image', src: currentLesson.screenshot!, title: name })}
               >
                 <img
-                  src={`/${currentLesson.screenshot}`}
+                  src={currentLesson.screenshot.startsWith('http') ? currentLesson.screenshot : `/${currentLesson.screenshot}`}
                   alt={name}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -588,7 +588,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                       }}
                     >
                       <img
-                        src={`/${lightbox.src}`}
+                        src={lightbox.src.startsWith('http') ? lightbox.src : `/${lightbox.src}`}
                         alt={lightbox.title || 'Image'}
                         className="max-w-none transition-transform duration-200"
                         style={{
