@@ -7,8 +7,9 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 const ROOT = process.cwd();
 const OUT_DIR = path.join(ROOT, 'public', 'generated-videos');
+const TMP_DIR = path.join(ROOT, '.video-tmp');
 const FROM = Number(process.env.FROM || '1');
-const TO = Number(process.env.TO || '200');
+const TO = Number(process.env.TO || '259');
 const FORCE_REGENERATE = process.env.FORCE_REGENERATE === '1';
 const LOCALES = (process.env.LOCALES || 'ru,uz').split(',').map((s) => s.trim()).filter(Boolean);
 const EDGE_TTS_BIN = fs.existsSync('/usr/local/bin/edge-tts') ? '/usr/local/bin/edge-tts' : 'edge-tts';
@@ -19,10 +20,11 @@ const HEIGHT = 720;
 const FPS = 1; // 1 frame per second for static image (smaller file)
 
 // GitHub Release URL base
-const GITHUB_REPO = 'FreedoomForm/genspark';
-const GITHUB_RELEASE_TAG = 'lesson-videos';
+const GITHUB_REPO = process.env.GITHUB_REPOSITORY || 'FreedoomForm/genspark';
+const GITHUB_RELEASE_TAG = process.env.VIDEO_RELEASE_TAG || 'lesson-videos';
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
+fs.mkdirSync(TMP_DIR, { recursive: true });
 
 function slugify(input) {
   return String(input || '')
@@ -41,12 +43,37 @@ function ffprobeDuration(file) {
   }
 }
 
-function getScreenshot(lesson) {
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(String(value || ''));
+}
+
+async function downloadRemoteScreenshot(url, lesson) {
+  const tempFile = path.join(TMP_DIR, `lesson-${String(lesson.order).padStart(3, '0')}.png`);
+  if (fs.existsSync(tempFile)) {
+    return tempFile;
+  }
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download screenshot: ${response.status} ${response.statusText}`);
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  fs.writeFileSync(tempFile, buffer);
+  return tempFile;
+}
+
+async function getScreenshot(lesson) {
   const screenshotsDir = path.join(ROOT, 'public', 'screenshots');
   
+  if (lesson.screenshot && isHttpUrl(lesson.screenshot)) {
+    return downloadRemoteScreenshot(lesson.screenshot, lesson);
+  }
+
   // Check if screenshot exists in lesson data
   if (lesson.screenshot) {
-    const screenshotPath = path.join(ROOT, 'public', lesson.screenshot);
+    const normalizedPath = lesson.screenshot.replace(/^\/+/, '');
+    const screenshotPath = path.join(ROOT, 'public', normalizedPath);
     if (fs.existsSync(screenshotPath)) {
       return screenshotPath;
     }
@@ -340,7 +367,7 @@ async function main() {
   for (const lesson of lessons) {
     console.log(`\n--- Lesson ${lesson.order}: ${lesson.ruName || lesson.uzName || 'unnamed'} ---`);
     
-    const screenshot = getScreenshot(lesson);
+    const screenshot = await getScreenshot(lesson);
     if (!screenshot) {
       console.log(`  ⚠ No screenshot found, skipping`);
       skipped++;

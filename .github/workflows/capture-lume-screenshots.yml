@@ -1,0 +1,106 @@
+name: Capture Lume Screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'Начальный номер урока'
+        required: false
+        default: '1'
+      to:
+        description: 'Конечный номер урока'
+        required: false
+        default: '259'
+      headless:
+        description: 'Headless режим (true/false)'
+        required: false
+        default: 'true'
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: '20'
+  SCREENSHOT_RELEASE_TAG: 'lume-screenshots'
+
+jobs:
+  capture-release-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Capture screenshots for Lume routes
+        env:
+          LUME_ADMIN_URL: ${{ secrets.LUME_ADMIN_URL }}
+          LUME_ADMIN_EMAIL: ${{ secrets.LUME_ADMIN_EMAIL }}
+          LUME_ADMIN_PASSWORD: ${{ secrets.LUME_ADMIN_PASSWORD }}
+          FROM: ${{ github.event.inputs.from || '1' }}
+          TO: ${{ github.event.inputs.to || '259' }}
+          HEADLESS: ${{ github.event.inputs.headless == 'false' && '0' || '1' }}
+        run: node scripts/capture-lume-screenshots.mjs
+
+      - name: Show capture output
+        run: |
+          echo "=== Release assets ==="
+          ls -la public/generated-screenshots/lume/release | sed -n '1,200p'
+          echo ""
+          echo "=== Manifest ==="
+          sed -n '1,160p' public/generated-screenshots/lume/manifest.json
+
+      - name: Upload screenshots artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lume-screenshots
+          path: public/generated-screenshots/lume/
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Create or update screenshots release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$SCREENSHOT_RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release create "$SCREENSHOT_RELEASE_TAG" \
+              --repo "${{ github.repository }}" \
+              --title "Lume Screenshots" \
+              --notes "Автоматически снятые скриншоты маршрутов Lume Admin."
+          fi
+
+          gh release upload "$SCREENSHOT_RELEASE_TAG" \
+            public/generated-screenshots/lume/release/*.png \
+            public/generated-screenshots/lume/manifest.json \
+            --repo "${{ github.repository }}" \
+            --clobber
+
+      - name: Sync screenshot URLs to database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SCREENSHOT_RELEASE_TAG: ${{ env.SCREENSHOT_RELEASE_TAG }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/sync-screenshot-release-urls.mjs
+
+      - name: Workflow summary
+        run: |
+          echo "### Lume screenshots" >> $GITHUB_STEP_SUMMARY
+          echo "- Release tag: $SCREENSHOT_RELEASE_TAG" >> $GITHUB_STEP_SUMMARY
+          echo "- Release page: https://github.com/${{ github.repository }}/releases/tag/$SCREENSHOT_RELEASE_TAG" >> $GITHUB_STEP_SUMMARY
+          echo "- Manifest: public/generated-screenshots/lume/manifest.json" >> $GITHUB_STEP_SUMMARY
+          echo "- Database sync: completed" >> $GITHUB_STEP_SUMMARY

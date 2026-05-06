@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Locale, t } from '@/lib/i18n';
 import LessonMediaPlayer from '@/components/LessonMediaPlayer';
+import { resolveLessonImageUrl } from '@/lib/lesson-media';
 
 type Lesson = {
   id: string;
@@ -375,7 +376,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                 onClick={() => setLightbox({ type: 'image', src: currentLesson.screenshot!, title: name })}
               >
                 <img
-                  src={`/${currentLesson.screenshot}`}
+                  src={resolveLessonImageUrl(currentLesson.screenshot) || ''}
                   alt={name}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -588,7 +589,7 @@ export default function LessonsView({ locale }: { locale: Locale }) {
                       }}
                     >
                       <img
-                        src={`/${lightbox.src}`}
+                        src={resolveLessonImageUrl(lightbox.src) || ''}
                         alt={lightbox.title || 'Image'}
                         className="max-w-none transition-transform duration-200"
                         style={{

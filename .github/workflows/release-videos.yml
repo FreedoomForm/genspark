@@ -1,21 +1,14 @@
-name: Release Lesson Videos
+name: Republish Lesson Videos
 
 on:
-  # Автоматический запуск при push видео файлов
-  push:
-    paths:
-      - 'public/generated-videos/**/*.mp4'
-    branches:
-      - main
-  # Ручной запуск
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Release version (e.g., v1.0.0)'
-        required: true
-        default: 'v1.0.0'
+      release_tag:
+        description: 'Тег релиза для видео'
+        required: false
+        default: 'lesson-videos'
       dry_run:
-        description: 'Dry run (only print URLs, do not upload)'
+        description: 'Только проверка без загрузки'
         required: false
         default: 'false'
         type: boolean
@@ -23,136 +16,65 @@ on:
 permissions:
   contents: write
 
+env:
+  NODE_VERSION: '20'
+
 jobs:
-  release:
+  republish:
     runs-on: ubuntu-latest
-    # Пропускаем если это pull request или нет видео файлов
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.repository == 'FreedoomForm/genspark')
+    timeout-minutes: 120
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
 
-      - name: Configure Git
+      - name: Install project dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Validate local video folder
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          test -d public/generated-videos
+          find public/generated-videos -maxdepth 1 -name '*.mp4' -type f | sort | sed -n '1,200p'
 
-      - name: Determine version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            # Автоматическая версия на основе даты
-            VERSION="v$(date +'%Y.%m.%d-%H%M')"
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "Auto-generated version: $VERSION"
-          fi
-
-      - name: List videos to upload
-        id: list-videos
-        run: |
-          echo "=== Videos in public/generated-videos ==="
-          if [ -d "public/generated-videos" ]; then
-            find public/generated-videos -name "*.mp4" -type f | sort
-            echo "count=$(find public/generated-videos -name '*.mp4' -type f | wc -l)" >> $GITHUB_OUTPUT
-          else
-            echo "No videos directory found"
-            echo "count=0" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Skip if no videos
-        if: steps.list-videos.outputs.count == '0'
-        run: |
-          echo "No videos found, skipping release creation"
-          exit 0
-
-      - name: Create release
-        if: steps.list-videos.outputs.count != '0' && (github.event_name == 'workflow_dispatch' && inputs.dry_run != 'true' || github.event_name == 'push')
+      - name: Create or update release
+        if: github.event.inputs.dry_run != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VIDEO_RELEASE_TAG: ${{ github.event.inputs.release_tag || 'lesson-videos' }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          echo "Creating release $VERSION..."
-          gh release create "$VERSION" \
-            --title "Lesson Videos $VERSION" \
-            --notes "Automated release of lesson videos for Lume Admin training" || echo "Release may already exist"
+          if ! gh release view "$VIDEO_RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release create "$VIDEO_RELEASE_TAG" \
+              --repo "${{ github.repository }}" \
+              --title "Lesson Videos" \
+              --notes "Повторная публикация готовых видеоуроков."
+          fi
 
-      - name: Upload videos to release
-        if: steps.list-videos.outputs.count != '0' && (github.event_name == 'workflow_dispatch' && inputs.dry_run != 'true' || github.event_name == 'push')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          for video in public/generated-videos/*.mp4; do
-            if [ -f "$video" ]; then
-              filename=$(basename "$video")
-              echo "Uploading $filename..."
-              gh release upload "$VERSION" "$video" --clobber || echo "Warning: Failed to upload $filename"
-            fi
-          done
+          gh release upload "$VIDEO_RELEASE_TAG" \
+            public/generated-videos/*.mp4 \
+            --repo "${{ github.repository }}" \
+            --clobber
 
-      - name: Update database video URLs
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run != 'true' || github.event_name == 'push'
+      - name: Sync URLs to database
+        if: github.event.inputs.dry_run != 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          if [ -z "$DATABASE_URL" ]; then
-            echo "DATABASE_URL secret not set, skipping database update"
-            exit 0
-          fi
-
-          VERSION="${{ steps.version.outputs.version }}"
-          npm install @prisma/client
-
-          cat > update-video-urls.mjs << EOF
-          import { PrismaClient } from '@prisma/client';
-          import fs from 'fs';
-
-          const prisma = new PrismaClient();
-          const BASE_URL = 'https://github.com/${{ github.repository }}/releases/download/$VERSION';
-
-          async function main() {
-            const lessons = await prisma.lesson.findMany({ orderBy: { order: 'asc' } });
-            const files = fs.readdirSync('public/generated-videos').filter(f => f.endsWith('.mp4'));
-            console.log('Found', files.length, 'video files');
-
-            let updated = 0;
-            for (const lesson of lessons) {
-              const orderStr = String(lesson.order).padStart(3, '0');
-              const ruFile = files.find(f => f === \`\${orderStr}-ru-lesson.mp4\`);
-              const uzFile = files.find(f => f.startsWith(\`\${orderStr}-uz-\`) && f.endsWith('.mp4'));
-
-              if (ruFile || uzFile) {
-                const videoMap = {
-                  ru: ruFile ? \`\${BASE_URL}/\${ruFile}\` : null,
-                  uz: uzFile ? \`\${BASE_URL}/\${uzFile}\` : null,
-                  default: ruFile ? \`\${BASE_URL}/\${ruFile}\` : (uzFile ? \`\${BASE_URL}/\${uzFile}\` : null)
-                };
-                await prisma.lesson.update({
-                  where: { id: lesson.id },
-                  data: { videoUrl: JSON.stringify(videoMap) }
-                });
-                updated++;
-              }
-            }
-            console.log('Updated', updated, 'lessons');
-          }
-
-          main().catch(console.error).finally(() => prisma.\$disconnect());
-          EOF
-
-          node update-video-urls.mjs
+          VIDEO_RELEASE_TAG: ${{ github.event.inputs.release_tag || 'lesson-videos' }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/sync-video-release-urls.mjs
 
       - name: Summary
+        env:
+          VIDEO_RELEASE_TAG: ${{ github.event.inputs.release_tag || 'lesson-videos' }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          echo "### Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version:** $VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "- **Videos uploaded:** ${{ steps.list-videos.outputs.count }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Video URLs: \`https://github.com/${{ github.repository }}/releases/download/$VERSION/XXX-ru-lesson.mp4\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Republish lesson videos" >> $GITHUB_STEP_SUMMARY
+          echo "- Release tag: $VIDEO_RELEASE_TAG" >> $GITHUB_STEP_SUMMARY
+          echo "- Dry run: ${{ github.event.inputs.dry_run || 'false' }}" >> $GITHUB_STEP_SUMMARY
