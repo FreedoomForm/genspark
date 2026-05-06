@@ -1,0 +1,183 @@
+name: Full lessons pipeline (screenshots + Pixtral + videos)
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: 'Начальный номер урока'
+        required: false
+        default: '1'
+      to:
+        description: 'Конечный номер урока'
+        required: false
+        default: '259'
+      force:
+        description: 'Принудительно перезаписать (1=yes)'
+        required: false
+        default: '0'
+      headless:
+        description: 'Headless режим (true/false)'
+        required: false
+        default: 'true'
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: '20'
+  SCREENSHOT_RELEASE_TAG: 'lume-screenshots'
+  VIDEO_RELEASE_TAG: 'lesson-videos'
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 720
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Install ffmpeg + edge-tts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg python3-pip
+          pip3 install edge-tts --break-system-packages
+          sudo ln -sf $(which edge-tts) /usr/local/bin/edge-tts
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Sync database schema
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -n "$DATABASE_URL" ]; then
+            echo 'DELETE FROM "LessonProgress" WHERE "lessonId" NOT IN (SELECT id FROM "lesson");' \
+              | npx prisma db execute --stdin || true
+            npx prisma db push --skip-generate
+          else
+            echo "DATABASE_URL secret missing"
+            exit 1
+          fi
+
+      # 1) скриншоты 259 routes из admin.lume.uz
+      - name: Step 1 — capture screenshots from admin.lume.uz
+        env:
+          LUME_ADMIN_URL: ${{ secrets.LUME_ADMIN_URL }}
+          LUME_ADMIN_EMAIL: ${{ secrets.LUME_ADMIN_EMAIL }}
+          LUME_ADMIN_PASSWORD: ${{ secrets.LUME_ADMIN_PASSWORD }}
+          FROM: ${{ github.event.inputs.from || '1' }}
+          TO: ${{ github.event.inputs.to || '259' }}
+          HEADLESS: ${{ github.event.inputs.headless == 'false' && '0' || '1' }}
+        run: node scripts/capture-lume-screenshots.mjs
+
+      # 2) релиз скриншотов в GitHub
+      - name: Step 2 — upload screenshots to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$SCREENSHOT_RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release create "$SCREENSHOT_RELEASE_TAG" \
+              --repo "${{ github.repository }}" \
+              --title "Lume Screenshots" \
+              --notes "Автоматически снятые скриншоты маршрутов Lume Admin."
+          fi
+          gh release upload "$SCREENSHOT_RELEASE_TAG" \
+            public/generated-screenshots/lume/release/*.png \
+            public/generated-screenshots/lume/manifest.json \
+            --repo "${{ github.repository }}" \
+            --clobber
+
+      # 3) запись ссылок на скриншоты в БД
+      - name: Step 3 — sync screenshot URLs to database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
+          SCREENSHOT_RELEASE_TAG: ${{ env.SCREENSHOT_RELEASE_TAG }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/sync-screenshot-release-urls.mjs
+
+      # 4) Pixtral описывает каждый скриншот → тексты уроков в БД
+      - name: Step 4 — describe screenshots with Pixtral and write texts to DB
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          PIXTRAL_MODEL: pixtral-12b-2409
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SCREENSHOT_RELEASE_TAG: ${{ env.SCREENSHOT_RELEASE_TAG }}
+          FROM: ${{ github.event.inputs.from || '1' }}
+          TO: ${{ github.event.inputs.to || '259' }}
+          FORCE: ${{ github.event.inputs.force || '0' }}
+          PIXTRAL_CONCURRENCY: '2'
+          PIXTRAL_RETRY: '3'
+        run: node scripts/describe-screenshots-pixtral.mjs
+
+      # 5) генерация mp4: edge-tts + ffmpeg + скриншот
+      - name: Step 5 — prepare screenshots for video generator
+        run: |
+          mkdir -p public/screenshots
+          if [ -d public/generated-screenshots/lume/release ]; then
+            cp -f public/generated-screenshots/lume/release/*.png public/screenshots/ 2>/dev/null || true
+          fi
+
+      - name: Step 6 — generate videos (edge-tts + ffmpeg)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
+          FROM: ${{ github.event.inputs.from || '1' }}
+          TO: ${{ github.event.inputs.to || '259' }}
+          FORCE_REGENERATE: ${{ github.event.inputs.force || '0' }}
+          LOCALES: 'ru,uz'
+        run: |
+          mkdir -p public/generated-videos
+          node scripts/generate-videos-simple.mjs
+
+      # 7) релиз видео в GitHub
+      - name: Step 7 — upload videos to GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "$VIDEO_RELEASE_TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            gh release create "$VIDEO_RELEASE_TAG" \
+              --repo "${{ github.repository }}" \
+              --title "Lesson Videos" \
+              --notes "Автогенерация обучающих видео с TTS."
+          fi
+          shopt -s nullglob
+          for f in public/generated-videos/*.mp4; do
+            gh release upload "$VIDEO_RELEASE_TAG" "$f" \
+              --repo "${{ github.repository }}" --clobber
+          done
+
+      # 8) запись ссылок на видео в БД
+      - name: Step 8 — sync video URLs to database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
+          VIDEO_RELEASE_TAG: ${{ env.VIDEO_RELEASE_TAG }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/sync-video-release-urls.mjs
+
+      - name: Workflow summary
+        run: |
+          {
+            echo "### Full lessons pipeline"
+            echo "- Range: ${{ github.event.inputs.from || '1' }}..${{ github.event.inputs.to || '259' }}"
+            echo "- Force: ${{ github.event.inputs.force || '0' }}"
+            echo "- Screenshots release: https://github.com/${{ github.repository }}/releases/tag/${SCREENSHOT_RELEASE_TAG}"
+            echo "- Videos release: https://github.com/${{ github.repository }}/releases/tag/${VIDEO_RELEASE_TAG}"
+          } >> $GITHUB_STEP_SUMMARY
