@@ -90,24 +90,74 @@ async function getScreenshotPath(lesson) {
   return candidates.find((file) => fs.existsSync(file)) || null;
 }
 
+function parseSteps(raw) {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function buildNarration(lesson, locale) {
   const isRu = locale === 'ru';
   const parts = [];
+  
   if (isRu) {
+    // Title and description
     if (lesson.ruName) parts.push(lesson.ruName);
     if (lesson.ruDescription) parts.push(lesson.ruDescription);
-    if (lesson.ruFunctionality) parts.push(lesson.ruFunctionality);
-    if (lesson.uiLocation) parts.push(`Расположение в интерфейсе: ${lesson.uiLocation}`);
-    if (lesson.ruTips) parts.push(`Советы: ${lesson.ruTips}`);
-    if (lesson.ruUseCase) parts.push(`Применение: ${lesson.ruUseCase}`);
+    
+    // Functionality
+    if (lesson.ruFunctionality) {
+      parts.push(`Функциональность: ${lesson.ruFunctionality}`);
+    }
+    
+    // Steps as numbered list
+    const ruSteps = parseSteps(lesson.ruSteps);
+    if (ruSteps.length > 0) {
+      const stepsText = ruSteps.map((step, i) => `${i + 1}. ${step}`).join('. ');
+      parts.push(`Инструкция: ${stepsText}`);
+    }
+    
+    // Tips
+    if (lesson.ruTips) {
+      parts.push(`Советы: ${lesson.ruTips}`);
+    }
+    
+    // Use case
+    if (lesson.ruUseCase) {
+      parts.push(`Применение: ${lesson.ruUseCase}`);
+    }
   } else {
+    // Uzbek (Latin)
     if (lesson.uzName) parts.push(lesson.uzName);
     if (lesson.uzDescription) parts.push(lesson.uzDescription);
-    if (lesson.uzFunctionality) parts.push(lesson.uzFunctionality);
-    if (lesson.uiLocation) parts.push(`Interfeysdagi joyi: ${lesson.uiLocation}`);
-    if (lesson.uzTips) parts.push(`Maslahatlar: ${lesson.uzTips}`);
-    if (lesson.uzUseCase) parts.push(`Qo'llash: ${lesson.uzUseCase}`);
+    
+    // Functionality
+    if (lesson.uzFunctionality) {
+      parts.push(`Funksionallik: ${lesson.uzFunctionality}`);
+    }
+    
+    // Steps as numbered list
+    const uzSteps = parseSteps(lesson.uzSteps);
+    if (uzSteps.length > 0) {
+      const stepsText = uzSteps.map((step, i) => `${i + 1}. ${step}`).join('. ');
+      parts.push(`Ko'rsatma: ${stepsText}`);
+    }
+    
+    // Tips
+    if (lesson.uzTips) {
+      parts.push(`Maslahatlar: ${lesson.uzTips}`);
+    }
+    
+    // Use case
+    if (lesson.uzUseCase) {
+      parts.push(`Qo'llash: ${lesson.uzUseCase}`);
+    }
   }
+  
   return parts.join('. ').replace(/\s+/g, ' ').trim();
 }
 

@@ -1,15 +1,16 @@
 // scripts/describe-screenshots-pixtral.mjs
 //
 // По одному отправляет каждый скриншот из public/generated-screenshots/lume/release/
-// в Mistral Pixtral (pixtral-12b-2409) и просит ТОЛЬКО краткое описание раздела (tasnif)
-// на русском. Без steps/tips/use-case и без uz-перевода.
+// в Mistral Pixtral (pixtral-12b-2409) и просит подробное описание урока
+// на русском (кириллица) и узбекском (латиница).
 //
-// Пишет в Neon Postgres (через Prisma) только три поля у lesson:
-//   - screenshot   = публичный URL PNG из GitHub release `lume-screenshots`
-//   - ruName       = короткое название раздела
-//   - ruDescription = описание (tasnif) на русском
-//
-// uz/videoUrl и т.д. — не трогаем (uz можно заполнить отдельно, видео пишет другой скрипт).
+// Пишет в Neon Postgres все поля lesson:
+//   - screenshot, ruName, uzName
+//   - ruDescription, uzDescription
+//   - ruFunctionality, uzFunctionality
+//   - ruSteps, uzSteps
+//   - ruTips, uzTips
+//   - ruUseCase, uzUseCase
 //
 // ENV:
 //   MISTRAL_API_KEY        - ключ Mistral (обязательно)
@@ -93,22 +94,65 @@ async function callPixtral(localImagePath, entry) {
   const buf = fs.readFileSync(localImagePath);
   const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
 
-  const system = 'Ты эксперт по CRM/админ-панели Lume. Опиши страницу по скриншоту. '
-    + 'Отвечай строго JSON, без markdown-кодоблоков и текста вне JSON.';
+  const system = `Ты эксперт по CRM/админ-панели Lume. Твоя задача — создать подробный обучающий урок по скриншоту страницы.
+
+ВАЖНО: Отвечай СТРОГО JSON, без markdown-кодоблоков и текста вне JSON.
+
+Требования к контенту:
+1. Опирайся ТОЛЬКО на то, что видно на скриншоте — заголовки, кнопки, таблицы, поля, меню.
+2. Русский текст пиши кириллицей (ЭДО, Склад, Товары).
+3. Узбекский текст пиши ЛАТИНИЦЕЙ (EDO, Ombor, Tovarlar) — НЕ кириллицей!
+4. Урок должен быть подробным и полезным для обучения сотрудника.
+
+Структура ответа:
+{
+  "ruName": "Название раздела на русском (4-8 слов)",
+  "uzName": "Bo'lim nomi o'zbek tilida (4-8 so'z)",
+  "ruDescription": "Подробное описание раздела: что это за страница, для чего нужна, какие данные отображаются. 3-6 предложений.",
+  "uzDescription": "Bo'limning batafsil tavsifi: bu qanday sahifa, nima uchun kerak, qanday ma'lumotlar ko'rsatiladi. 3-6 jumlalar.",
+  "ruFunctionality": "Описание функциональности: какие действия можно выполнить, какие кнопки и инструменты доступны. 2-5 предложений.",
+  "uzFunctionality": "Funksionallik tavsifi: qanday amallarni bajarish mumkin, qanday tugmalar va vositalar mavjud. 2-5 jumlalar.",
+  "ruSteps": "Пошаговая инструкция использования (JSON-массив строк, 3-7 шагов)",
+  "uzSteps": "Foydalanish bo'yicha qadam-baqadam ko'rsatmalar (JSON-massiv, 3-7 qadam)",
+  "ruTips": "Полезные советы и рекомендации по работе с разделом. 2-4 предложения.",
+  "uzTips": "Bo'lim bilan ishlash bo'yicha foydali maslahatlar va tavsiyalar. 2-4 jumlalar.",
+  "ruUseCase": "Когда и в каких ситуациях используется этот раздел. Практические примеры. 2-3 предложения.",
+  "uzUseCase": "Bu bo'lim qachon va qanday vaziyatlarda ishlatiladi. Amaliy misollar. 2-3 jumlalar."
+}
+
+ПРИМЕР ответа для раздела "Товары":
+{
+  "ruName": "Справочник товаров",
+  "uzName": "Tovarlar ma'lumotnomasi",
+  "ruDescription": "Раздел «Товары» — это центральный справочник для управления номенклатурой. Здесь отображается список всех товаров с их наименованием, артикулом, ценой и остатком на складе. Позволяет искать, фильтровать и сортировать товары по различным параметрам.",
+  "uzDescription": "«Tovarlar» bo'limi — bu nomenklatrani boshqarish uchun asosiy ma'lumotnoma. Bu yerda barcha tovarlar ro'yxati ularning nomi, artikuli, narxi va ombordagi qoldig'i bilan ko'rsatiladi. Tovarlarni turli parametrlar bo'yicha qidirish, filtrlash va saralash imkoniyati mavjud.",
+  "ruFunctionality": "В разделе доступны: создание нового товара, редактирование существующего, удаление, массовые операции, экспорт в Excel. Есть возможность сканировать штрих-код для быстрого поиска. Каждому товару можно назначить категорию, установить цены для разных точек продаж.",
+  "uzFunctionality": "Bo'limda mavjud: yangi tovar yaratish, mavjudini tahrirlash, o'chirish, ommaviy amallar, Excelga eksport. Tezkor qidirish uchun shtrix-kodni skanerlash imkoniyati bor. Har bir tovorga kategoriya belgilash, turli savdo nuqtalari uchun narxlarni o'rnatish mumkin.",
+  "ruSteps": ["Откройте раздел «Товары» через боковое меню", "Используйте строку поиска или фильтры для нахождения нужного товара", "Нажмите на название товара для просмотра детальной информации", "Для редактирования кликните на иконку карандаша", "После внесения изменений нажмите «Сохранить»"],
+  "uzSteps": ["Yon menyudan «Tovarlar» bo'limini oching", "Kerakli tovarni topish uchun qidiruv satridan yoki filtrlardan foydalaning", "Batafsil ma'lumotni ko'rish uchun tovar nomini bosing", "Tahrirlash uchun qalam belgisini bosing", "O'zgarishlarni kiritgandan so'ng «Saqlash» tugmasini bosing"],
+  "ruTips": "Используйте комбинацию фильтров для быстрого поиска нужной группы товаров. Для массового изменения цен выберите несколько товаров галочками и используйте функцию «Массовое редактирование». Регулярно проверяйте товары без категории — это упростит отчётность.",
+  "uzTips": "Kerakli tovarlar guruhini tez topish uchun filtrlar kombinatsiyasidan foydalaning. Narxlarni ommaviy o'zgartirish uchun bir nechta tovarni belgilang va «Ommaviy tahrirlash» funksiyasidan foydalaning. Kategoriyasiz tovarlarni muntazam tekshiring — bu hisobotlarni soddalashtiradi.",
+  "ruUseCase": "Раздел используется при приёмке товаров на склад, при инвентаризации, при печати ценников, при анализе продаж и расчёте рентабельности.",
+  "uzUseCase": "Bo'lim tovarlarni omborga qabul qilishda, inventarizatsiyada, narx yorliqlarini chop etishda, savdoni tahlil qilishda va rentabellikni hisoblashda ishlatiladi."
+}`;
 
   const userText = [
     `Скриншот страницы admin.lume.uz по адресу ${entry.absoluteUrl} (route ${entry.materializedRoute || entry.rawRoute}).`,
-    'Верни строго JSON только из двух полей на русском языке:',
-    '{',
-    '  "ruName": "короткое название раздела (4–8 слов)",',
-    '  "ruDescription": "описание раздела (2–5 предложений): что это за страница и для чего она нужна. Опирайся только на то, что видно на скриншоте — заголовки, кнопки, столбцы таблицы. Без выдумок."',
-    '}',
-    'Никаких других полей в ответе быть не должно.',
+    '',
+    'Создай подробный обучающий урок по этому скриншоту.',
+    'Требования:',
+    '1. Опирайся ТОЛЬКО на то, что ВИДИШЬ на скриншоте — кнопки, заголовки, таблицы, поля ввода.',
+    '2. НЕ выдумывай функционал, которого не видно.',
+    '3. Русский текст — кириллицей, узбекский — ЛАТИНИЦЕЙ.',
+    '4. Урок должен быть полезным для обучения нового сотрудника.',
+    '',
+    'Верни JSON со всеми полями: ruName, uzName, ruDescription, uzDescription, ruFunctionality, uzFunctionality, ruSteps (массив), uzSteps (массив), ruTips, uzTips, ruUseCase, uzUseCase.'
   ].join('\n');
 
   const body = {
     model: PIXTRAL_MODEL,
-    temperature: 0.2,
+    temperature: 0.3,
+    max_tokens: 4000,
     response_format: { type: 'json_object' },
     messages: [
       { role: 'system', content: system },
@@ -168,6 +212,20 @@ function defaultRuName(entry) {
   return r ? `Раздел ${r}` : `Урок ${entry.order}`;
 }
 
+function ensureArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [value];
+    } catch {
+      return value.split('\n').filter(s => s.trim());
+    }
+  }
+  return [];
+}
+
 async function alreadyDescribed(order) {
   const existing = await prisma.lesson.findFirst({ where: { order } });
   if (!existing) return false;
@@ -175,23 +233,46 @@ async function alreadyDescribed(order) {
     existing.screenshot &&
     existing.ruName &&
     existing.ruDescription &&
-    existing.ruDescription.length > 30
+    existing.uzName &&
+    existing.uzDescription &&
+    existing.ruDescription.length > 30 &&
+    existing.uzDescription.length > 10
   );
 }
 
 async function upsertLesson(entry, desc) {
   const screenshotUrl = buildScreenshotUrl(entry);
   const ruName = (desc.ruName && String(desc.ruName).trim()) || defaultRuName(entry);
+  const uzName = (desc.uzName && String(desc.uzName).trim()) || ruName;
   const ruDescription = (desc.ruDescription && String(desc.ruDescription).trim()) || null;
+  const uzDescription = (desc.uzDescription && String(desc.uzDescription).trim()) || null;
+  const ruFunctionality = (desc.ruFunctionality && String(desc.ruFunctionality).trim()) || null;
+  const uzFunctionality = (desc.uzFunctionality && String(desc.uzFunctionality).trim()) || null;
+  const ruStepsArray = ensureArray(desc.ruSteps);
+  const uzStepsArray = ensureArray(desc.uzSteps);
+  const ruSteps = ruStepsArray.length > 0 ? JSON.stringify(ruStepsArray) : null;
+  const uzSteps = uzStepsArray.length > 0 ? JSON.stringify(uzStepsArray) : null;
+  const ruTips = (desc.ruTips && String(desc.ruTips).trim()) || null;
+  const uzTips = (desc.uzTips && String(desc.uzTips).trim()) || null;
+  const ruUseCase = (desc.ruUseCase && String(desc.ruUseCase).trim()) || null;
+  const uzUseCase = (desc.uzUseCase && String(desc.uzUseCase).trim()) || null;
 
   const data = {
     order: entry.order,
     category: categoryFromRoute(entry.rawRoute || entry.materializedRoute || ''),
     screenshot: screenshotUrl,
     ruName,
+    uzName,
     ruDescription,
-    // uz пока заполняем тем же ruName, чтобы NOT NULL не падал в случае seed-схемы
-    uzName: ruName,
+    uzDescription,
+    ruFunctionality,
+    uzFunctionality,
+    ruSteps,
+    uzSteps,
+    ruTips,
+    uzTips,
+    ruUseCase,
+    uzUseCase,
     updatedAt: new Date(),
   };
 
@@ -224,7 +305,7 @@ async function processOne(entry) {
   }
 
   await upsertLesson(entry, desc);
-  log(`${tag} OK -> "${(desc.ruName || '').slice(0, 60)}"`);
+  log(`${tag} OK -> "${(desc.ruName || '').slice(0, 60)}" / "${(desc.uzName || '').slice(0, 60)}"`);
   return { status: 'ok' };
 }
 
