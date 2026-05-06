@@ -200,12 +200,6 @@ function getTextForTTS(lesson, locale) {
     if (lesson.ruName) parts.push(lesson.ruName);
     if (lesson.ruDescription) parts.push(lesson.ruDescription);
     if (lesson.ruFunctionality) parts.push(lesson.ruFunctionality);
-    if (lesson.ruSteps) {
-      try {
-        const steps = JSON.parse(lesson.ruSteps);
-        if (Array.isArray(steps)) {
-          parts.push('Шаги: ' + steps.join('. '));
-        }
       } catch {
         parts.push(lesson.ruSteps);
       }
@@ -218,12 +212,6 @@ function getTextForTTS(lesson, locale) {
     if (lesson.uzName) parts.push(lesson.uzName);
     if (lesson.uzDescription) parts.push(lesson.uzDescription);
     if (lesson.uzFunctionality) parts.push(lesson.uzFunctionality);
-    if (lesson.uzSteps) {
-      try {
-        const steps = JSON.parse(lesson.uzSteps);
-        if (Array.isArray(steps)) {
-          parts.push('Qadamlar: ' + steps.join('. '));
-        }
       } catch {
         parts.push(lesson.uzSteps);
       }
