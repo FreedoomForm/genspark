@@ -1,278 +1,388 @@
+import 'dotenv/config';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { chromium } from 'playwright';
 
 const ROOT = process.cwd();
-const BASE_URL = (process.env.LUME_ADMIN_URL || 'https://admin.lume.uz').replace(/\/$/, '');
-const LOGIN_URL = `${BASE_URL}/login`;
-const OUTPUT_DIR = path.join(ROOT, 'public', 'generated-screenshots', 'lume');
-const RAW_DIR = path.join(OUTPUT_DIR, 'raw');
-const RELEASE_DIR = path.join(OUTPUT_DIR, 'release');
-const MANIFEST_FILE = path.join(OUTPUT_DIR, 'manifest.json');
-const FROM = Number(process.env.FROM || '1');
-const TO = Number(process.env.TO || '259');
-const HEADLESS = process.env.HEADLESS !== '0';
+const LESSONS_DIR = path.join(ROOT, 'lessons259');
+const OUT_BASE = path.join(ROOT, 'public', 'generated-screenshots', 'lume');
+const RAW_DIR = path.join(OUT_BASE, 'raw');
+const RELEASE_DIR = path.join(OUT_BASE, 'release');
+const MANIFEST_PATH = path.join(OUT_BASE, 'manifest.json');
 
-for (const dir of [OUTPUT_DIR, RAW_DIR, RELEASE_DIR]) {
-  fs.mkdirSync(dir, { recursive: true });
+const BASE_URL = String(process.env.LUME_ADMIN_URL || 'https://admin.lume.uz').replace(/\/+$/, '');
+const EMAIL = process.env.LUME_ADMIN_EMAIL || process.env.LUME_LOGIN || '';
+const PASSWORD = process.env.LUME_ADMIN_PASSWORD || process.env.LUME_PASSWORD || '';
+const FROM = Math.max(1, Number(process.env.FROM || '1'));
+const TO = Math.max(FROM, Number(process.env.TO || '259'));
+const HEADLESS = !['0', 'false', 'no'].includes(String(process.env.HEADLESS || '1').toLowerCase());
+const PAGE_WAIT_MS = Math.max(2500, Number(process.env.PAGE_WAIT_MS || '4500'));
+const LOGIN_WAIT_MS = Math.max(3000, Number(process.env.LOGIN_WAIT_MS || '7000'));
+
+for (const dir of [OUT_BASE, RAW_DIR, RELEASE_DIR]) fs.mkdirSync(dir, { recursive: true });
+
+function log(...args) {
+  console.log('[capture]', ...args);
 }
 
-function slugify(input) {
-  return String(input || '')
+function warn(...args) {
+  console.warn('[capture][warn]', ...args);
+}
+
+function sha256File(filePath) {
+  const hash = crypto.createHash('sha256');
+  hash.update(fs.readFileSync(filePath));
+  return hash.digest('hex');
+}
+
+function slugify(value) {
+  return String(value || '')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
+    .replace(/[^a-z0-9/_:-]+/g, '-')
+    .replace(/\/+/g, '_')
+    .replace(/:+/g, '_')
+    .replace(/-+/g, '-')
+    .replace(/^[-_]+|[-_]+$/g, '')
     .slice(0, 90) || 'route';
 }
 
-function sha256Buffer(buffer) {
-  return crypto.createHash('sha256').update(buffer).digest('hex');
+function normalizeKey(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
 }
 
-function sha256Text(value) {
-  return crypto.createHash('sha256').update(String(value || ''), 'utf8').digest('hex');
+function routeCategory(route) {
+  const s = String(route || '').toLowerCase();
+  if (/^\/(dashboard|home|cabinet)\b/.test(s)) return 'cabinet';
+  if (/(warehouse|product|receipt|transfer|realiz|reprice|inventor|writeoff|group|barcode|techcard|manufactur|favorite)/.test(s)) return 'warehouse';
+  if (/(avatar|client|driver|courier|personal|tag|telegram|contractor|loyalt|shift|subscription|tariff)/.test(s)) return 'reference';
+  if (/(finance|account|balance|salary|cashbox|payment|sold-check|return-check)/.test(s)) return 'finance';
+  if (/(report|sales|abc|xyz|top|analytics|pl|z-report|movement)/.test(s)) return 'reports';
+  return 'settings';
 }
 
-function fileSha256(filePath) {
-  return sha256Buffer(fs.readFileSync(filePath));
+function materializeRoute(route, order) {
+  const replacements = {
+    ':id': '1',
+    ':uuid': '11111111-1111-1111-1111-111111111111',
+    ':guid': '11111111-1111-1111-1111-111111111111',
+    ':slug': 'demo',
+    ':name': 'demo',
+    ':type': 'all',
+    ':code': 'demo',
+    ':page': '1',
+    ':index': '1',
+    ':userId': '1',
+    ':lessonId': String(order || 1),
+  };
+
+  return String(route || '')
+    .replace(/:[A-Za-z0-9_]+/g, (token) => replacements[token] || '1')
+    .replace(/\/+/g, '/');
 }
 
-function normalizeRoute(route) {
-  const clean = String(route || '').trim();
-  if (!clean) return null;
-  if (clean === '/') return '/dashboard';
-  if (clean === '/dashboard') return '/dashboard';
-  return clean.startsWith('/dashboard') ? clean : `/dashboard${clean}`;
+function lessonStem(fileName) {
+  return String(fileName)
+    .replace(/^\d+_/, '')
+    .replace(/\.md$/i, '');
 }
 
-function materializeDynamicSegments(route) {
-  return route.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, (_, key) => {
-    const lower = key.toLowerCase();
-    if (lower.includes('id')) return '1';
-    if (lower.includes('name')) return 'sample';
-    if (lower.includes('type')) return 'default';
-    if (lower.includes('param')) return 'value';
-    return 'sample';
-  });
+function parseLessonFile(filePath) {
+  const name = path.basename(filePath);
+  const txt = fs.readFileSync(filePath, 'utf8');
+  const order = Number((name.match(/^(\d+)/) || [])[1] || '0');
+  const route = (txt.match(/\*\*Route:\*\*\s*`([^`]+)`/) || [])[1] || '';
+  const title = (txt.match(/^#\s+(.+)$/m) || [])[1] || name;
+  return {
+    order,
+    fileName: name,
+    stem: lessonStem(name),
+    title,
+    headingBase: String(title).replace(/^Urok\s+\d+\.\s*/i, '').split('/')[0].trim(),
+    rawRoute: route.startsWith('/') ? route : `/${route}`,
+  };
 }
 
-function buildFileName(order, originalRoute) {
-  return `${String(order).padStart(3, '0')}_${slugify(originalRoute.replace(/^\//, ''))}.png`;
+function loadLessons() {
+  const files = fs.readdirSync(LESSONS_DIR)
+    .filter((f) => /^\d+.*\.md$/i.test(f))
+    .sort((a, b) => a.localeCompare(b, 'en'));
+
+  return files
+    .map((f) => parseLessonFile(path.join(LESSONS_DIR, f)))
+    .filter((x) => x.order >= FROM && x.order <= TO && x.rawRoute);
 }
 
-function normalizeAssetUrl(assetPath) {
-  if (!assetPath) return null;
-  if (/^https?:\/\//i.test(assetPath)) return assetPath;
-  return `${BASE_URL}${assetPath.startsWith('/') ? assetPath : `/${assetPath}`}`;
-}
-
-function isLikelyRoute(value) {
-  return Boolean(
-    value &&
-    value.startsWith('/') &&
-    !value.startsWith('//') &&
-    !value.startsWith('/assets') &&
-    !value.startsWith('/api') &&
-    !value.includes('http') &&
-    !value.includes('*') &&
-    !/\.(css|js|map|png|jpe?g|svg|gif|webp|ico|woff2?|ttf|json)$/i.test(value) &&
-    value.length <= 120
-  );
-}
-
-function collectRoutes(source, pattern) {
-  const routes = new Set();
-  for (const match of source.matchAll(pattern)) {
-    const route = match[1]?.trim();
-    if (isLikelyRoute(route)) routes.add(route);
+async function firstVisible(page, selectors, timeout = 15000) {
+  for (const selector of selectors) {
+    try {
+      const loc = page.locator(selector).first();
+      await loc.waitFor({ state: 'visible', timeout });
+      return { locator: loc, selector };
+    } catch {
+      // continue
+    }
   }
-  return routes;
+  return null;
 }
 
-function extractRoutesFromBundle(source) {
-  const primary = collectRoutes(source, /path:\s*["'`]([^"'`]+)["'`]/g);
-  const fallback = collectRoutes(source, /["'`](\/[a-zA-Z0-9_\-/:]+)["'`]/g);
-  const routes = primary.size >= 200 ? primary : new Set([...primary, ...fallback]);
-
-  return [...routes]
-    .filter((route) => route !== '/login')
-    .sort((a, b) => a.localeCompare(b));
-}
-
-async function findBundleUrl(page) {
-  const html = await page.content();
-  const match = html.match(/<script[^>]+src=["']([^"']*\/assets\/index-[^"']+\.js[^"']*)["']/i);
-  if (!match?.[1]) {
-    throw new Error('Не удалось найти основной JS bundle после входа');
-  }
-  return normalizeAssetUrl(match[1]);
+async function debugDump(page, label) {
+  const base = path.join(OUT_BASE, `debug-${label}`);
+  await page.screenshot({ path: `${base}.png`, fullPage: true }).catch(() => {});
+  const info = {
+    url: page.url(),
+    title: await page.title().catch(() => ''),
+    bodyText: await page.locator('body').innerText().catch(() => ''),
+    html: await page.content().catch(() => ''),
+  };
+  fs.writeFileSync(`${base}.json`, JSON.stringify(info, null, 2));
 }
 
 async function login(page) {
-  await page.goto(LOGIN_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.waitForTimeout(1200);
+  const emailSelectors = [
+    'input[name="email"]',
+    'input[type="email"]',
+    'input[placeholder*="почт"]',
+    'input[placeholder*="email" i]',
+  ];
+  const passwordSelectors = [
+    'input[name="password"]',
+    'input[type="password"]',
+    'input[placeholder*="парол"]',
+    'input[placeholder*="password" i]',
+  ];
+  const submitSelectors = [
+    'button:has-text("Войти")',
+    'button:has-text("Kirish")',
+    'button[type="submit"]',
+  ];
 
-  const emailSelectors = ['#email', 'input[type="email"]', 'input[name="email"]'];
-  const passwordSelectors = ['#password', 'input[type="password"]', 'input[name="password"]'];
+  await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+  await page.waitForTimeout(LOGIN_WAIT_MS);
 
-  let emailFilled = false;
-  for (const selector of emailSelectors) {
-    if (await page.locator(selector).count()) {
-      await page.locator(selector).first().fill(process.env.LUME_ADMIN_EMAIL || '');
-      emailFilled = true;
-      break;
-    }
+  const email = await firstVisible(page, emailSelectors, 20000);
+  const password = await firstVisible(page, passwordSelectors, 5000);
+
+  if (!email || !password) {
+    await debugDump(page, 'login-missing-fields');
+    throw new Error('Не найдены поля email/password. Проверь debug-login-missing-fields.*');
   }
 
-  let passwordFilled = false;
-  for (const selector of passwordSelectors) {
-    if (await page.locator(selector).count()) {
-      await page.locator(selector).first().fill(process.env.LUME_ADMIN_PASSWORD || '');
-      passwordFilled = true;
-      break;
-    }
+  await email.locator.fill(EMAIL);
+  await password.locator.fill(PASSWORD);
+
+  const submit = await firstVisible(page, submitSelectors, 5000);
+  if (submit) {
+    await submit.locator.click();
+  } else {
+    await password.locator.press('Enter');
   }
 
-  if (!emailFilled || !passwordFilled) {
-    throw new Error('Не найдены поля email/password');
+  await page.waitForURL(/\/dashboard|\/(ado|avatars|barcodes|cabinet|warehouse|reports|settings|vendor|salepoint|admin)/, { timeout: 120000 }).catch(() => {});
+  await page.waitForTimeout(LOGIN_WAIT_MS);
+
+  if (/\/login\/?$/.test(page.url())) {
+    await debugDump(page, 'login-still-on-login');
+    throw new Error('Логин не выполнился: после submit страница осталась на login');
   }
 
-  await Promise.all([
-    page.waitForURL(/\/dashboard/i, { timeout: 60000 }),
-    page.locator('button[type="submit"]').first().click(),
-  ]);
-
-  await page.waitForTimeout(2500);
+  log('Login OK ->', page.url());
 }
 
-async function waitForStableUi(page) {
-  await page.waitForLoadState('domcontentloaded', { timeout: 30000 }).catch(() => {});
-  await page.waitForLoadState('networkidle', { timeout: 12000 }).catch(() => {});
-  await page.waitForFunction(() => !!document.body && document.body.innerText.trim().length > 200, null, { timeout: 15000 }).catch(() => {});
-  await page.waitForTimeout(1200);
+async function ensureAuthenticated(page) {
+  const hasEmailField = await page.locator('input[name="email"], input[type="email"]').count().catch(() => 0);
+  if (hasEmailField) {
+    warn('Session seems lost, logging in again...');
+    await login(page);
+  }
+}
+
+async function fetchRouteAliases(page) {
+  const aliases = new Map([
+    ['barcodes', '/vendor/barcodes/print'],
+    ['barcodes_create', '/vendor/barcodes/print'],
+    ['barcodes_edit_id', '/vendor/barcodes/print'],
+  ]);
+
+  try {
+    const src = await page.locator('script[type="module"][src]').first().getAttribute('src');
+    if (!src) return aliases;
+    const bundleUrl = new URL(src, `${BASE_URL}/`).toString();
+    const res = await fetch(bundleUrl);
+    if (!res.ok) return aliases;
+    const text = await res.text();
+    const re = /title:"([^"]+)",link:"([^"]+)"/g;
+    for (const m of text.matchAll(re)) {
+      const key = normalizeKey(m[1]);
+      if (key && m[2] && !aliases.has(key)) aliases.set(key, m[2]);
+    }
+  } catch {
+    // ignore alias extraction errors
+  }
+  return aliases;
+}
+
+function buildCandidateUrls(lesson, aliases) {
+  const materializedRoute = materializeRoute(lesson.rawRoute, lesson.order);
+  const keys = [
+    normalizeKey(lesson.stem),
+    normalizeKey(lesson.stem.split('__')[0]),
+    normalizeKey(materializedRoute.split('/').filter(Boolean)[0] || ''),
+    normalizeKey(lesson.headingBase),
+  ].filter(Boolean);
+
+  const candidates = [];
+  const add = (value) => {
+    const cleaned = String(value || '').trim();
+    if (!cleaned) return;
+    const absolute = cleaned.startsWith('http')
+      ? cleaned
+      : new URL(cleaned.replace(/^\/+/, ''), `${BASE_URL}/`).toString();
+    if (!candidates.includes(absolute)) candidates.push(absolute);
+  };
+
+  for (const key of keys) if (aliases.has(key)) add(aliases.get(key));
+  add(materializedRoute);
+  add(`/salepoint${materializedRoute}`);
+  add(`/vendor${materializedRoute}`);
+  add(`/admin${materializedRoute}`);
+  add(`/dashboard${materializedRoute}`);
+
+  return { materializedRoute, candidates };
+}
+
+function looksLikeDashboard(url, bodyText) {
+  const u = String(url || '');
+  const text = String(bodyText || '');
+  return /\/dashboard\/?$/i.test(u) && /Начало работы|Складские операции|Финансовые операции/.test(text);
+}
+
+async function openLesson(page, lesson, aliases) {
+  const { materializedRoute, candidates } = buildCandidateUrls(lesson, aliases);
+
+  for (const candidate of candidates) {
+    await page.goto(candidate, { waitUntil: 'domcontentloaded', timeout: 120000 });
+    await page.waitForTimeout(PAGE_WAIT_MS);
+    await ensureAuthenticated(page);
+    const bodyText = await page.locator('body').innerText().catch(() => '');
+    const currentUrl = page.url();
+    if (!looksLikeDashboard(currentUrl, bodyText) || /\/dashboard\//.test(currentUrl) || /\/vendor\//.test(currentUrl) || /\/admin\//.test(currentUrl) || /\/salepoint\//.test(currentUrl)) {
+      return { materializedRoute, resolvedUrl: currentUrl, bodyText };
+    }
+  }
+
+  if (lesson.headingBase) {
+    await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+    await page.waitForTimeout(2000);
+    const target = page.getByText(lesson.headingBase, { exact: true }).first();
+    if (await target.count().catch(() => 0)) {
+      await target.click({ timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(PAGE_WAIT_MS);
+      const bodyText = await page.locator('body').innerText().catch(() => '');
+      return { materializedRoute, resolvedUrl: page.url(), bodyText };
+    }
+  }
+
+  return {
+    materializedRoute,
+    resolvedUrl: page.url(),
+    bodyText: await page.locator('body').innerText().catch(() => ''),
+  };
+}
+
+function displayAssetName(lesson) {
+  return `${String(lesson.order).padStart(3, '0')}_${slugify(lesson.stem || lesson.rawRoute)}.png`;
+}
+
+function displayTitle(lesson) {
+  return String(lesson.title || lesson.fileName).replace(/^Urok\s+\d+\.\s*/i, '').trim();
 }
 
 async function main() {
-  if (!process.env.LUME_ADMIN_EMAIL || !process.env.LUME_ADMIN_PASSWORD) {
-    throw new Error('Нужно передать LUME_ADMIN_EMAIL и LUME_ADMIN_PASSWORD через GitHub Secrets');
+  if (!EMAIL || !PASSWORD) {
+    throw new Error('LUME_ADMIN_EMAIL/LUME_ADMIN_PASSWORD are required');
   }
 
-  const browser = await chromium.launch({
-    headless: HEADLESS,
-    args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-setuid-sandbox'],
-  });
+  const lessons = loadLessons();
+  log(`Loaded ${lessons.length} lessons in range ${FROM}..${TO}`);
+  if (!lessons.length) throw new Error('No lessons found for selected range');
 
-  const context = await browser.newContext({
-    viewport: { width: 1600, height: 1200 },
-    locale: 'ru-RU',
-    ignoreHTTPSErrors: true,
-  });
-
+  const browser = await chromium.launch({ headless: HEADLESS, args: ['--disable-dev-shm-usage'] });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1200 }, ignoreHTTPSErrors: true });
   const page = await context.newPage();
-  const seenHashes = new Map();
-  const duplicateGroups = new Map();
+
+  const manifest = {
+    generatedAt: new Date().toISOString(),
+    baseUrl: BASE_URL,
+    from: FROM,
+    to: TO,
+    count: lessons.length,
+    entries: [],
+  };
 
   try {
     await login(page);
-    const bundleUrl = await findBundleUrl(page);
-    const bundleSource = await page.evaluate(async (url) => {
-      const response = await fetch(url, { credentials: 'include' });
-      if (!response.ok) throw new Error(`bundle fetch failed: ${response.status}`);
-      return response.text();
-    }, bundleUrl);
+    const aliases = await fetchRouteAliases(page);
+    log(`Loaded route aliases: ${aliases.size}`);
 
-    const extractedRoutes = extractRoutesFromBundle(bundleSource);
-    if (extractedRoutes.length < 200) {
-      throw new Error(`Из bundle извлечено слишком мало роутов: ${extractedRoutes.length}`);
-    }
+    for (const lesson of lessons) {
+      const fileName = displayAssetName(lesson);
+      const rawPath = path.join(RAW_DIR, fileName);
+      const releasePath = path.join(RELEASE_DIR, fileName);
 
-    const selectedRoutes = extractedRoutes.slice(FROM - 1, TO);
-    const entries = [];
-
-    for (let index = 0; index < selectedRoutes.length; index += 1) {
-      const order = FROM + index;
-      const rawRoute = selectedRoutes[index];
-      const routeWithDashboard = normalizeRoute(rawRoute);
-      const materializedRoute = materializeDynamicSegments(routeWithDashboard);
-      const absoluteUrl = `${BASE_URL}${materializedRoute}`;
-      const fileName = buildFileName(order, rawRoute);
-      const rawFile = path.join(RAW_DIR, fileName);
-
+      log(`#${lesson.order} ${lesson.rawRoute}`);
       let status = 'ok';
       let error = null;
-
+      let resolvedUrl = null;
+      let materializedRoute = lesson.rawRoute;
+      let bodyText = '';
       try {
-        await page.goto(absoluteUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
-        await waitForStableUi(page);
-        await page.screenshot({ path: rawFile, fullPage: true });
-      } catch (captureError) {
+        const opened = await openLesson(page, lesson, aliases);
+        materializedRoute = opened.materializedRoute;
+        resolvedUrl = opened.resolvedUrl;
+        bodyText = opened.bodyText || '';
+        await page.screenshot({ path: rawPath, fullPage: true });
+        fs.copyFileSync(rawPath, releasePath);
+      } catch (e) {
         status = 'error';
-        error = captureError instanceof Error ? captureError.message : String(captureError);
-        await page.screenshot({ path: rawFile, fullPage: true }).catch(() => {});
+        error = e instanceof Error ? e.message : String(e);
+        warn(`#${lesson.order} failed: ${error}`);
+        await page.screenshot({ path: rawPath, fullPage: true }).catch(() => {});
+        if (fs.existsSync(rawPath)) fs.copyFileSync(rawPath, releasePath);
       }
 
-      const text = await page.locator('body').innerText().catch(() => '');
-      const screenshotHash = fs.existsSync(rawFile) ? fileSha256(rawFile) : null;
-      const textHash = sha256Text(text);
-
-      let assetName = null;
-      let duplicateOf = null;
-      if (screenshotHash && fs.existsSync(rawFile)) {
-        if (!seenHashes.has(screenshotHash)) {
-          assetName = fileName;
-          seenHashes.set(screenshotHash, assetName);
-          fs.copyFileSync(rawFile, path.join(RELEASE_DIR, assetName));
-          duplicateGroups.set(assetName, [fileName]);
-        } else {
-          assetName = seenHashes.get(screenshotHash);
-          duplicateOf = assetName;
-          duplicateGroups.get(assetName)?.push(fileName);
-        }
-      }
-
-      entries.push({
-        order,
-        rawRoute,
-        routeWithDashboard,
+      const sha256 = fs.existsSync(rawPath) ? sha256File(rawPath) : null;
+      const pageTitle = await page.title().catch(() => '');
+      const finalText = bodyText || await page.locator('body').innerText().catch(() => '');
+      manifest.entries.push({
+        order: lesson.order,
+        title: displayTitle(lesson),
+        sourceFile: lesson.fileName,
+        rawRoute: lesson.rawRoute,
         materializedRoute,
-        absoluteUrl,
+        absoluteUrl: resolvedUrl || new URL(materializedRoute.replace(/^\/+/, ''), `${BASE_URL}/`).toString(),
         fileName,
-        assetName,
-        duplicateOf,
-        screenshotHash,
-        textHash,
-        textLength: text.length,
+        assetName: fileName,
+        category: routeCategory(lesson.rawRoute),
         status,
         error,
+        screenshotSha256: sha256,
+        pageTitle,
+        textSample: finalText.slice(0, 4000),
       });
-
-      console.log(`${String(order).padStart(3, '0')} ${status.toUpperCase()} ${materializedRoute} ${assetName ? `-> ${assetName}` : ''}`);
     }
-
-    const manifest = {
-      generatedAt: new Date().toISOString(),
-      baseUrl: BASE_URL,
-      bundleUrl,
-      from: FROM,
-      to: TO,
-      extractedRoutesCount: extractedRoutes.length,
-      selectedRoutesCount: selectedRoutes.length,
-      uniqueAssetsCount: seenHashes.size,
-      duplicateGroups: Object.fromEntries(duplicateGroups.entries()),
-      entries,
-    };
-
-    fs.writeFileSync(MANIFEST_FILE, JSON.stringify(manifest, null, 2));
-    console.log(`Manifest saved to ${MANIFEST_FILE}`);
-    console.log(`Unique assets: ${seenHashes.size}`);
   } finally {
     await context.close().catch(() => {});
     await browser.close().catch(() => {});
+    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+    log(`Manifest saved: ${MANIFEST_PATH}`);
   }
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error('[capture] fatal:', error);
   process.exit(1);
 });
