@@ -36,6 +36,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify lessons259 directory exists
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Directory listing:"
+          ls -la
+          echo ""
+          echo "Checking lessons259 directory:"
+          if [ -d "lessons259" ]; then
+            echo "✓ lessons259 directory exists"
+            echo "  Files count: $(ls -1 lessons259/*.md 2>/dev/null | wc -l)"
+          else
+            echo "✗ lessons259 directory NOT found!"
+            echo "  Attempting to fetch from git..."
+            git checkout HEAD -- lessons259 2>/dev/null || echo "  Could not checkout lessons259 from git"
+            if [ -d "lessons259" ]; then
+              echo "  ✓ Successfully restored lessons259"
+            else
+              echo "  ERROR: lessons259 directory is missing from the repository"
+              exit 1
+            fi
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

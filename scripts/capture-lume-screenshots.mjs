@@ -107,9 +107,26 @@ function parseLessonFile(filePath) {
 }
 
 function loadLessons() {
+  // Check if directory exists
+  if (!fs.existsSync(LESSONS_DIR)) {
+    const cwd = process.cwd();
+    const parentDir = path.dirname(LESSONS_DIR);
+    const parentContents = fs.existsSync(parentDir) ? fs.readdirSync(parentDir) : [];
+    throw new Error(
+      `lessons259 directory not found!\n` +
+      `  Expected path: ${LESSONS_DIR}\n` +
+      `  Current working dir: ${cwd}\n` +
+      `  Parent directory (${parentDir}) contents: ${parentContents.slice(0, 20).join(', ')}${parentContents.length > 20 ? '...' : ''}\n` +
+      `  Total items in parent: ${parentContents.length}\n` +
+      `  Make sure the lessons259 directory is committed to the repository.`
+    );
+  }
+
   const files = fs.readdirSync(LESSONS_DIR)
     .filter((f) => /^\d+.*\.md$/i.test(f))
     .sort((a, b) => a.localeCompare(b, 'en'));
+
+  log(`Found ${files.length} .md files in lessons259/`);
 
   return files
     .map((f) => parseLessonFile(path.join(LESSONS_DIR, f)))
