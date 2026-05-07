@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const lessons = await prisma.lesson.findMany({
       orderBy: { order: 'asc' },
       include: {
-        LessonProgress: {
+        lessonProgress: {
           where: { userId: session.sub },
           select: { viewedAt: true, completed: true },
         },
@@ -42,9 +42,9 @@ export async function GET(req: NextRequest) {
         ruUseCase: l.ruUseCase,
         uzUseCase: l.uzUseCase,
         uiLocation: l.uiLocation,
-        viewed: l.LessonProgress.length > 0,
-        completed: l.LessonProgress[0]?.completed || false,
-        viewedAt: l.LessonProgress[0]?.viewedAt || null,
+        viewed: l.lessonProgress.length > 0,
+        completed: l.lessonProgress[0]?.completed || false,
+        viewedAt: l.lessonProgress[0]?.viewedAt || null,
       })),
     });
   } catch (e: any) {

@@ -52,7 +52,7 @@ export async function GET() {
 
     const attempt = await prisma.attempt.findUnique({
       where: { userId: session.sub },
-      include: { Answer: true },
+      include: { answers: true },
     });
     if (!attempt) {
       return NextResponse.json({ status: 'not_started' });
@@ -82,7 +82,7 @@ export async function GET() {
       status: attempt.finishedAt ? 'finished' : 'in_progress',
       attemptId: attempt.id,
       questions: publicQuestions,
-      answeredIds: attempt.Answer.map((a) => a.questionId),
+      answeredIds: attempt.answers.map((a) => a.questionId),
       correctCount: attempt.correctCount,
       incorrectCount: attempt.incorrectCount,
       totalCount: attempt.totalCount,
