@@ -73,6 +73,98 @@ function loadManifest() {
   return entries.filter(e => e.order >= FROM && e.order <= TO);
 }
 
+// Group entries by screenshot SHA256 hash to detect duplicate screenshots
+function groupByScreenshotHash(entries) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const hash = entry.screenshotSha256 || 'no-hash';
+    if (!groups.has(hash)) groups.set(hash, []);
+    groups.get(hash).push(entry);
+  }
+  return groups;
+}
+
+// Define focus aspects for lessons with identical screenshots
+// When multiple lessons share the same screenshot, each gets a different focus
+const FOCUS_ASPECTS = [
+  {
+    name: 'overview',
+    ruInstruction: 'СФОКУСИРУЙСЯ на общем обзоре страницы: навигации, структуре, основных разделах и элементах интерфейса. Опиши как ориентироваться на странице.',
+    uzInstruction: 'SAHIFANING umumiy ko\'rinishiga E\'TIBOR BER: navigatsiya, tuzilma, asosiy bo\'limlar va interfeys elementlari. Sahifada qanday yo\'nalishni tushuntir.'
+  },
+  {
+    name: 'viewing',
+    ruInstruction: 'СФОКУСИРУЙСЯ на функциях ПРОСМОТРА и ПОИСКА: как найти нужную запись, какие фильтры доступны, как сортировать данные, какие колонки в таблице.',
+    uzInstruction: 'KO\'RISH va QIDIRISH funksiyalariga E\'TIBOR BER: kerakli yozuvni qanday topish, qanday filtrlar mavjud, ma\'lumotlarni qanday saralash, jadvaldagi qanday ustunlar.'
+  },
+  {
+    name: 'creating',
+    ruInstruction: 'СФОКУСИРУЙСЯ на функции СОЗДАНИЯ и ДОБАВЛЕНИЯ: как создать новую запись, какие поля нужно заполнить, какие кнопки для сохранения. Опиши процесс добавления.',
+    uzInstruction: 'YARATISH va QO\'SHISH funksiyasiga E\'TIBOR BER: yangi yozuvni qanday yaratish, qanday maydonlarni to\'ldirish kerak, saqlash uchun qanday tugmalar. Qo\'shish jarayonini tushuntir.'
+  },
+  {
+    name: 'editing',
+    ruInstruction: 'СФОКУСИРУЙСЯ на функции РЕДАКТИРОВАНИЯ: как изменить существующую запись, какие поля можно редактировать, как сохранить изменения.',
+    uzInstruction: 'TAHRIRLASH funksiyasiga E\'TIBOR BER: mavjud yozuvni qanday o\'zgartirish, qanday maydonlarni tahrirlash mumkin, o\'zgarishlarni qanday saqlash.'
+  },
+  {
+    name: 'deleting',
+    ruInstruction: 'СФОКУСИРУЙСЯ на функциях УДАЛЕНИЯ и АРХИВАЦИИ: как удалить запись, что происходит при удалении, можно ли восстановить, как архивировать.',
+    uzInstruction: 'O\'CHIRISH va ARXIVLASH funksiyalariga E\'TIBOR BER: yozuvni qanday o\'chirish, o\'chirishda nima bo\'ladi, qayta tiklash mumkinmi, qanday arxivlash.'
+  },
+  {
+    name: 'export',
+    ruInstruction: 'СФОКУСИРУЙСЯ на функциях ЭКСПОРТА и ПЕЧАТИ: как выгрузить данные в Excel, как распечатать, какие форматы экспорта доступны.',
+    uzInstruction: 'EKSPORT va CHOP ETISH funksiyalariga E\'TIBOR BER: ma\'lumotlarni Excelga qanday yuklab olish, qanday chop etish, qanday eksport formatlari mavjud.'
+  },
+  {
+    name: 'advanced',
+    ruInstruction: 'СФОКУСИРУЙСЯ на РАСШИРЕННЫХ функциях: массовые операции, импорт, интеграция с другими разделами, специальные настройки.',
+    uzInstruction: 'KENGAYTIRILGAN funksiyalarga E\'TIBOR BER: ommaviy amallar, import, boshqa bo\'limlar bilan integratsiya, maxsus sozlamalar.'
+  },
+  {
+    name: 'reports',
+    ruInstruction: 'СФОКУСИРУЙСЯ на ОТЧЁТАХ и АНАЛИТИКЕ: какие отчёты можно построить, какие показатели отслеживать, как анализировать данные.',
+    uzInstruction: 'HISOBOTLAR va ANALITIKAGA E\'TIBOR BER: qanday hisobotlar tuzish mumkin, qanday ko\'rsatkichlarni kuzatish, ma\'lumotlarni qanday tahlil qilish.'
+  }
+];
+
+// Determine focus aspect for an entry based on its position in duplicate group
+function getFocusAspect(entry, groupIndex, groupSize) {
+  // If screenshot is unique, use overview
+  if (groupSize === 1) {
+    return FOCUS_ASPECTS[0]; // overview
+  }
+
+  // For duplicate screenshots, assign different aspects
+  // Use route hints to pick appropriate aspect
+  const route = String(entry.rawRoute || entry.materializedRoute || '').toLowerCase();
+
+  // Try to match route keywords to focus aspects
+  if (route.includes('/add') || route.includes('/create') || route.includes('/new')) {
+    return FOCUS_ASPECTS[2]; // creating
+  }
+  if (route.includes('/edit') || route.includes('/update')) {
+    return FOCUS_ASPECTS[3]; // editing
+  }
+  if (route.includes('/delete') || route.includes('/remove') || route.includes('/trash')) {
+    return FOCUS_ASPECTS[4]; // deleting
+  }
+  if (route.includes('/export') || route.includes('/print')) {
+    return FOCUS_ASPECTS[5]; // export
+  }
+  if (route.includes('/import') || route.includes('/bulk') || route.includes('/mass')) {
+    return FOCUS_ASPECTS[6]; // advanced
+  }
+  if (route.includes('/report') || route.includes('/analytics') || route.includes('/stats')) {
+    return FOCUS_ASPECTS[7]; // reports
+  }
+
+  // Fallback: cycle through aspects based on group index
+  const aspectIndex = Math.min(groupIndex, FOCUS_ASPECTS.length - 1);
+  return FOCUS_ASPECTS[aspectIndex];
+}
+
 function pickImagePath(entry) {
   const assetName = entry.assetName || entry.fileName;
   if (assetName) {
@@ -90,12 +182,24 @@ function buildScreenshotUrl(entry) {
   return `${SCREENSHOT_BASE_URL}/${encodeURIComponent(assetName)}`;
 }
 
-async function callPixtral(localImagePath, entry) {
+async function callPixtral(localImagePath, entry, focusAspect = null) {
   const buf = fs.readFileSync(localImagePath);
   const dataUrl = `data:image/png;base64,${buf.toString('base64')}`;
 
-  const system = `Ты эксперт по CRM/админ-панели Lume. Твоя задача — создать подробный обучающий урок по скриншоту страницы.
+  // Build focus instruction if provided (for duplicate screenshots)
+  let focusInstruction = '';
+  if (focusAspect) {
+    focusInstruction = `
 
+ОСОБОЕ УКАЗАНИЕ: ${focusAspect.ruInstruction}
+
+O'ZBEKCHA KO'RSATMA: ${focusAspect.uzInstruction}
+
+Это один из нескольких уроков с одинаковым скриншотом. Сфокусируйся на указанном аспекте, но опиши и другие функции кратко.`;
+  }
+
+  const system = `Ты эксперт по CRM/админ-панели Lume. Твоя задача — создать подробный обучающий урок по скриншоту страницы.
+${focusInstruction}
 ВАЖНО: Отвечай СТРОГО JSON, без markdown-кодоблоков и текста вне JSON.
 
 Требования к контенту:
@@ -283,7 +387,7 @@ async function upsertLesson(entry, desc) {
   return prisma.lesson.create({ data });
 }
 
-async function processOne(entry) {
+async function processOne(entry, focusAspect = null) {
   const tag = `[${entry.order}] ${entry.materializedRoute || entry.rawRoute}`;
 
   if (!FORCE && await alreadyDescribed(entry.order)) {
@@ -299,13 +403,17 @@ async function processOne(entry) {
 
   let desc = {};
   try {
-    desc = await callPixtral(imgPath, entry);
+    desc = await callPixtral(imgPath, entry, focusAspect);
+    if (focusAspect) {
+      log(`${tag} [focus: ${focusAspect.name}] OK -> "${(desc.ruName || '').slice(0, 60)}"`);
+    } else {
+      log(`${tag} OK -> "${(desc.ruName || '').slice(0, 60)}"`);
+    }
   } catch (e) {
     warn(`${tag} Pixtral failed permanently: ${e.message}`);
   }
 
   await upsertLesson(entry, desc);
-  log(`${tag} OK -> "${(desc.ruName || '').slice(0, 60)}" / "${(desc.uzName || '').slice(0, 60)}"`);
   return { status: 'ok' };
 }
 
@@ -333,7 +441,41 @@ async function main() {
   const entries = loadManifest();
   log(`Loaded ${entries.length} manifest entries (range ${FROM}..${TO})`);
 
-  const results = await runWithConcurrency(entries, processOne, CONCURRENCY);
+  // Group entries by screenshot hash to handle duplicates
+  const groups = groupByScreenshotHash(entries);
+
+  // Log duplicate groups for visibility
+  let duplicateCount = 0;
+  for (const [hash, group] of groups) {
+    if (group.length > 1) {
+      duplicateCount += group.length;
+      log(`Duplicate screenshot group (${group.length} lessons): orders ${group.map(e => e.order).join(', ')}`);
+    }
+  }
+  if (duplicateCount > 0) {
+    log(`Total ${duplicateCount} lessons have duplicate screenshots - will get different focus aspects`);
+  }
+
+  // Build work items with focus aspects
+  const workItems = [];
+  for (const [hash, group] of groups) {
+    group.forEach((entry, index) => {
+      const focusAspect = getFocusAspect(entry, index, group.length);
+      // Only pass focus aspect if it's a duplicate (group size > 1)
+      workItems.push({
+        entry,
+        focusAspect: group.length > 1 ? focusAspect : null,
+        groupSize: group.length
+      });
+    });
+  }
+
+  // Sort by order for predictable processing
+  workItems.sort((a, b) => a.entry.order - b.entry.order);
+
+  // Process with concurrency
+  const worker = (item) => processOne(item.entry, item.focusAspect);
+  const results = await runWithConcurrency(workItems, worker, CONCURRENCY);
 
   const counts = results.reduce((acc, r) => {
     const k = r?.status || 'unknown';
