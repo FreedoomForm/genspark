@@ -16,6 +16,12 @@ type Lesson = {
   uzDescription: string | null;
   ruFunctionality: string | null;
   uzFunctionality: string | null;
+  ruSteps: string | null;
+  uzSteps: string | null;
+  ruTips: string | null;
+  uzTips: string | null;
+  ruUseCase: string | null;
+  uzUseCase: string | null;
   uiLocation: string | null;
 };
 
@@ -208,6 +214,22 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
     }
   }
 
+  async function handleDeleteAllLessons() {
+    if (!confirm(locale === 'uz' ? "BARCHA darslarni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!" : 'Вы уверены, что хотите удалить ВСЕ уроки? Это действие нельзя отменить!')) return;
+    if (!confirm(locale === 'uz' ? "So'nggi tasdiqlash: Davom etyapsizmi?" : 'Последнее подтверждение: Продолжить?')) return;
+    try {
+      const res = await fetch('/api/admin/lessons/delete-all', { method: 'DELETE' });
+      if (res.ok) {
+        await fetchLessons();
+      } else {
+        alert('Failed to delete all lessons');
+      }
+    } catch (e) {
+      console.error('Delete all error:', e);
+      alert('Failed to delete all lessons');
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -225,6 +247,12 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
         <div className="text-sm text-gray-500">
           {locale === 'uz' ? `Ko'rsatilmoqda: ${filteredLessons.length}` : `Показано: ${filteredLessons.length}`}
         </div>
+        <button
+          onClick={handleDeleteAllLessons}
+          className="text-sm px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg transition-colors"
+        >
+          {locale === 'uz' ? "Barchasini o'chirish" : 'Удалить все'}
+        </button>
       </div>
 
       {/* Filters */}
@@ -377,6 +405,64 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                         <p className="text-sm text-blue-800">{functionality}</p>
                       </div>
                     )}
+
+                    {/* Steps */}
+                    {(() => {
+                      const steps = locale === 'uz' ? lesson.uzSteps : lesson.ruSteps;
+                      if (!steps) return null;
+                      let stepsArray: string[] = [];
+                      try {
+                        stepsArray = JSON.parse(steps);
+                      } catch {
+                        stepsArray = steps.split('\n').filter(s => s.trim());
+                      }
+                      if (stepsArray.length === 0) return null;
+                      return (
+                        <div className="bg-green-50 p-3 rounded-lg mt-2">
+                          <p className="text-xs font-medium text-green-600 mb-2">
+                            {locale === 'uz' ? 'Bosqichlar:' : 'Шаги:'}
+                          </p>
+                          <ol className="space-y-1">
+                            {stepsArray.map((step, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm text-green-800">
+                                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-green-200 text-green-800 flex items-center justify-center text-xs font-bold">
+                                  {idx + 1}
+                                </span>
+                                <span>{step}</span>
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Use Case */}
+                    {(() => {
+                      const useCase = locale === 'uz' ? lesson.uzUseCase : lesson.ruUseCase;
+                      if (!useCase) return null;
+                      return (
+                        <div className="bg-purple-50 p-3 rounded-lg mt-2">
+                          <p className="text-xs font-medium text-purple-600 mb-1">
+                            {locale === 'uz' ? 'Qachon foydalaniladi:' : 'Когда используется:'}
+                          </p>
+                          <p className="text-sm text-purple-800">{useCase}</p>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Tips */}
+                    {(() => {
+                      const tips = locale === 'uz' ? lesson.uzTips : lesson.ruTips;
+                      if (!tips) return null;
+                      return (
+                        <div className="bg-amber-50 p-3 rounded-lg mt-2">
+                          <p className="text-xs font-medium text-amber-600 mb-1">
+                            💡 {locale === 'uz' ? 'Maslahatlar:' : 'Советы:'}
+                          </p>
+                          <p className="text-sm text-amber-800">{tips}</p>
+                        </div>
+                      );
+                    })()}
 
                     {/* Action buttons */}
                     <div className="mt-3 flex gap-2">
