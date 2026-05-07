@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       include: {
         Attempt: true,
         _count: {
-          select: { LessonProgress: true },
+          select: { lessonProgress: true },
         },
       },
       take: 200,
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
               finishedAt: u.Attempt.finishedAt,
             }
           : null,
-        lessonsViewed: u._count.LessonProgress,
+        lessonsViewed: u._count.lessonProgress,
       })),
     });
   } catch (e: any) {
