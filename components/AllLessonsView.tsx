@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { Locale, t } from '@/lib/i18n';
 import LessonMediaPlayer from '@/components/LessonMediaPlayer';
-import { resolveLessonImageUrl } from '@/lib/lesson-media';
 
 type Lesson = {
   id: string;
@@ -350,7 +349,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                         >
                           <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-gray-200 group-hover:ring-2 group-hover:ring-lume-purple transition-all">
                             <img
-                              src={resolveLessonImageUrl(lesson.screenshot) || ''}
+                              src={lesson.screenshot.startsWith('http') ? lesson.screenshot : `/${lesson.screenshot}`}
                               alt={name}
                               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -484,11 +483,11 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                     className="input w-full"
                     value={editingLesson.screenshot || ''}
                     onChange={(e) => setEditingLesson({ ...editingLesson, screenshot: e.target.value || null })}
-                    placeholder="screenshots/example.png или https://..."
+                    placeholder="screenshots/example.png"
                   />
                   {editingLesson.screenshot && (
                     <img
-                      src={resolveLessonImageUrl(editingLesson.screenshot) || ''}
+                      src={editingLesson.screenshot.startsWith('http') ? editingLesson.screenshot : `/${editingLesson.screenshot}`}
                       alt="Preview"
                       className="mt-2 max-h-32 rounded border"
                     />
@@ -676,7 +675,7 @@ export default function AllLessonsView({ locale }: { locale: Locale }) {
                       }}
                     >
                       <img
-                        src={resolveLessonImageUrl(lightbox.src) || ''}
+                        src={lightbox.src.startsWith('http') ? lightbox.src : `/${lightbox.src}`}
                         alt={lightbox.title || 'Image'}
                         className="max-w-none transition-transform duration-200"
                         style={{

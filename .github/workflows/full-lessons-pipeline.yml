@@ -10,7 +10,7 @@ on:
       to:
         description: 'Конечный номер урока'
         required: false
-        default: '259'
+        default: '183'
       force:
         description: 'Принудительно перезаписать (1=yes)'
         required: false
@@ -36,6 +36,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify lessons259 directory exists
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Directory listing:"
+          ls -la
+          echo ""
+          echo "Checking lessons259 directory:"
+          if [ -d "lessons259" ]; then
+            echo "✓ lessons259 directory exists"
+            echo "  Files count: $(ls -1 lessons259/*.md 2>/dev/null | wc -l)"
+          else
+            echo "✗ lessons259 directory NOT found!"
+            echo "  Attempting to fetch from git..."
+            git checkout HEAD -- lessons259 2>/dev/null || echo "  Could not checkout lessons259 from git"
+            if [ -d "lessons259" ]; then
+              echo "  ✓ Successfully restored lessons259"
+            else
+              echo "  ERROR: lessons259 directory is missing from the repository"
+              exit 1
+            fi
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -80,7 +104,7 @@ jobs:
           LUME_ADMIN_EMAIL: ${{ secrets.LUME_ADMIN_EMAIL }}
           LUME_ADMIN_PASSWORD: ${{ secrets.LUME_ADMIN_PASSWORD }}
           FROM: ${{ github.event.inputs.from || '1' }}
-          TO: ${{ github.event.inputs.to || '259' }}
+          TO: ${{ github.event.inputs.to || '183' }}
           HEADLESS: ${{ github.event.inputs.headless == 'false' && '0' || '1' }}
         run: node scripts/capture-lume-screenshots.mjs
 
@@ -120,7 +144,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           SCREENSHOT_RELEASE_TAG: ${{ env.SCREENSHOT_RELEASE_TAG }}
           FROM: ${{ github.event.inputs.from || '1' }}
-          TO: ${{ github.event.inputs.to || '259' }}
+          TO: ${{ github.event.inputs.to || '183' }}
           FORCE: ${{ github.event.inputs.force || '0' }}
           PIXTRAL_CONCURRENCY: '2'
           PIXTRAL_RETRY: '3'
@@ -139,7 +163,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DATABASE_URL }}
           FROM: ${{ github.event.inputs.from || '1' }}
-          TO: ${{ github.event.inputs.to || '259' }}
+          TO: ${{ github.event.inputs.to || '183' }}
           FORCE_REGENERATE: ${{ github.event.inputs.force || '0' }}
           LOCALES: 'ru,uz'
         run: |
@@ -176,7 +200,7 @@ jobs:
         run: |
           {
             echo "### Full lessons pipeline"
-            echo "- Range: ${{ github.event.inputs.from || '1' }}..${{ github.event.inputs.to || '259' }}"
+            echo "- Range: ${{ github.event.inputs.from || '1' }}..${{ github.event.inputs.to || '183' }}"
             echo "- Force: ${{ github.event.inputs.force || '0' }}"
             echo "- Screenshots release: https://github.com/${{ github.repository }}/releases/tag/${SCREENSHOT_RELEASE_TAG}"
             echo "- Videos release: https://github.com/${{ github.repository }}/releases/tag/${VIDEO_RELEASE_TAG}"
