@@ -10,7 +10,7 @@ on:
       to:
         description: 'Конечный номер урока'
         required: false
-        default: '183'
+        default: '179'
       force:
         description: 'Принудительно перезаписать (1=yes)'
         required: false
@@ -104,7 +104,7 @@ jobs:
           LUME_ADMIN_EMAIL: ${{ secrets.LUME_ADMIN_EMAIL }}
           LUME_ADMIN_PASSWORD: ${{ secrets.LUME_ADMIN_PASSWORD }}
           FROM: ${{ github.event.inputs.from || '1' }}
-          TO: ${{ github.event.inputs.to || '183' }}
+          TO: ${{ github.event.inputs.to || '179' }}
           HEADLESS: ${{ github.event.inputs.headless == 'false' && '0' || '1' }}
         run: node scripts/capture-lume-screenshots.mjs
 
@@ -144,7 +144,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           SCREENSHOT_RELEASE_TAG: ${{ env.SCREENSHOT_RELEASE_TAG }}
           FROM: ${{ github.event.inputs.from || '1' }}
-          TO: ${{ github.event.inputs.to || '183' }}
+          TO: ${{ github.event.inputs.to || '179' }}
           FORCE: ${{ github.event.inputs.force || '0' }}
           PIXTRAL_CONCURRENCY: '2'
           PIXTRAL_RETRY: '3'
@@ -163,7 +163,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DIRECT_URL: ${{ secrets.DATABASE_URL }}
           FROM: ${{ github.event.inputs.from || '1' }}
-          TO: ${{ github.event.inputs.to || '183' }}
+          TO: ${{ github.event.inputs.to || '179' }}
           FORCE_REGENERATE: ${{ github.event.inputs.force || '0' }}
           LOCALES: 'ru,uz'
         run: |
@@ -200,7 +200,7 @@ jobs:
         run: |
           {
             echo "### Full lessons pipeline"
-            echo "- Range: ${{ github.event.inputs.from || '1' }}..${{ github.event.inputs.to || '183' }}"
+            echo "- Range: ${{ github.event.inputs.from || '1' }}..${{ github.event.inputs.to || '179' }}"
             echo "- Force: ${{ github.event.inputs.force || '0' }}"
             echo "- Screenshots release: https://github.com/${{ github.repository }}/releases/tag/${SCREENSHOT_RELEASE_TAG}"
             echo "- Videos release: https://github.com/${{ github.repository }}/releases/tag/${VIDEO_RELEASE_TAG}"
