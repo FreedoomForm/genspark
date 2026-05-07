@@ -1,16 +1,16 @@
-# Urok 1. ЭДО
+# Urok 90. Принтеры
 
-**Route:** `/ado`  
+**Route:** `/printers`  
 **Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**URL:** https://admin.lume.uz/printers
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/131_printers.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/printers` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Принтеры». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 
@@ -25,6 +25,7 @@ Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 - Esli na stranitse est tablitsa, srazu proveri poisk, filtr i paginatsiyu.
 - Parametricheskiye route-y s :id, :name, :type i drugimi segmentami obychno zavisyat ot konkretnoy zapisi v baze.
 - Posle sohraneniya proveri, izmenilsya li status, spisok ili kartochka objekta.
+- Dlya pechatnyh stranits proveri printer, shablon i format bumagi pered zapuskom pechati.
 
 ## Fragment teksta so stranitsy
 ```

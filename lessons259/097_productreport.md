@@ -1,16 +1,16 @@
-# Urok 1. ЭДО
+# Urok 97. Товарный отчёт
 
-**Route:** `/ado`  
-**Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**Route:** `/productreport`  
+**Razdel:** Отчёты  
+**URL:** https://admin.lume.uz/productreport
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/142_productreport.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/productreport` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Товарный отчёт». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 

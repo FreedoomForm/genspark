@@ -1,16 +1,16 @@
-# Urok 1. ЭДО
+# Urok 70. Заказы / Активные
 
-**Route:** `/ado`  
-**Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**Route:** `/orders/active`  
+**Razdel:** Заказы  
+**URL:** https://admin.lume.uz/orders/active
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/098_orders__active.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/orders/active` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Заказы». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 

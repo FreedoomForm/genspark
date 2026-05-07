@@ -1,16 +1,16 @@
-# Urok 1. ЭДО
+# Urok 76. Отчёт по параметрам
 
-**Route:** `/ado`  
-**Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**Route:** `/paramsreport`  
+**Razdel:** Отчёты  
+**URL:** https://admin.lume.uz/paramsreport
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/112_paramsreport.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/paramsreport` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Отчёт по параметрам». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 

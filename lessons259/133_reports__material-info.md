@@ -1,16 +1,16 @@
-# Urok 1. ЭДО
+# Urok 133. Отчёты / Материальная информация
 
-**Route:** `/ado`  
-**Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**Route:** `/reports/material-info`  
+**Razdel:** Отчёты  
+**URL:** https://admin.lume.uz/reports/material-info
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/193_reports__material-info.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/reports/material-info` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Отчёты». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 

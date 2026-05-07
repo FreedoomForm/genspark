@@ -1,16 +1,16 @@
-# Urok 1. ЭДО
+# Urok 170. Telegram бот
 
-**Route:** `/ado`  
+**Route:** `/tgbot`  
 **Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**URL:** https://admin.lume.uz/tgbot
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/236_tgbot.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/tgbot` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Telegram бот». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 

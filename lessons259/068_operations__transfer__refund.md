@@ -1,16 +1,16 @@
-# Urok 1. ЭДО
+# Urok 68. Операции / Трансфер / Возврат
 
-**Route:** `/ado`  
+**Route:** `/operations/transfer/refund`  
 **Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**URL:** https://admin.lume.uz/operations/transfer/refund
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/096_operations__transfer__refund.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/operations/transfer/refund` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Операции». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 

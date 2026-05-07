@@ -1,25 +1,25 @@
-# Urok 1. ЭДО
+# Urok 14. Клиенты / Детали / История
 
-**Route:** `/ado`  
-**Razdel:** Общее  
-**URL:** https://admin.lume.uz/ado
+**Route:** `/clients/details/history`  
+**Razdel:** Клиенты  
+**URL:** https://admin.lume.uz/clients/details/history
 
-![Screenshot](../shots259/001_ado.png)
+![Screenshot](../shots259/019_clients__details__history.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/ado` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/clients/details/history` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «ЭДО». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto stranitsa detalnogo prosmotra v razdele «Клиенты», gde mozhno izuchit podrobnosti, svyazannye dokumenty ili istoriyu izmeneniy.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 
 ## Poshagovyy stsenariy raboty
 1. Voydite v admin-panel i otkroyte nuzhnyy route cherez levoye menyu ili pryamoy adres.
 2. Proverte verhniye filtry, poisk, knopy sozdaniya ili tablichnyy spisok elementov.
-3. Ispolzuyte poisk, filtry po date, statusu, skladu ili kategorii.
-4. Otkroyte nuzhnuyu stroku dlya detalnogo prosmotra ili redaktirovaniya.
-5. Pri neobhodimosti eksportiruyte, pechataite ili sozdavayte novyye zapisi iz etogo razdela.
+3. Izuchite kartochku, blokи dannyh i svyazannye razdely.
+4. Pri neobhodimosti pereidite v istoriyu, dvizhenie, tranzaktsii ili svyazannye dokumenty.
+5. Ispolzuyte etu stranitsu dlya proverki odnoi konkretnoi zapisi ili obyekta.
 
 ## Poleznye podskazki
 - Esli na stranitse est tablitsa, srazu proveri poisk, filtr i paginatsiyu.
