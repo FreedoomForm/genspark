@@ -218,10 +218,99 @@ async function ensureAuthenticated(page) {
 }
 
 async function fetchRouteAliases(page) {
+  // Hardcoded route aliases for pages that require specific URL prefixes
+  // Many routes in admin.lume.uz require /vendor/ or /admin/ prefix instead of /salepoint/
   const aliases = new Map([
+    // Barcodes - vendor routes
     ['barcodes', '/vendor/barcodes/print'],
     ['barcodes_create', '/vendor/barcodes/print'],
+    ['barcodes_print', '/vendor/barcodes/print'],
     ['barcodes_edit_id', '/vendor/barcodes/print'],
+
+    // Clients - vendor routes
+    ['clients', '/vendor/clients'],
+    ['clients_add', '/vendor/clients/add'],
+    ['clients_details_id', '/vendor/clients/details/1'],
+    ['clients_details_history', '/vendor/clients/details/history'],
+    ['clients_loyalty', '/vendor/clients/loyalty'],
+    ['clients_loyalty_edit', '/vendor/clients/loyalty/edit'],
+
+    // Couriers - vendor routes
+    ['couriers', '/vendor/couriers'],
+    ['couriers_add', '/vendor/couriers/add'],
+    ['courier_details_id', '/vendor/courier/details/1'],
+    ['courier_edit_id', '/vendor/courier/edit/1'],
+
+    // Default IKPU - vendor routes
+    ['defaultikpu', '/vendor/defaultikpu'],
+    ['defaultikpu_add', '/vendor/defaultikpu/add'],
+    ['defaultikpu_edit_id', '/vendor/defaultikpu/edit/1'],
+
+    // Global warehouse - vendor routes
+    ['globalwarehouse', '/vendor/globalwarehouse'],
+    ['globalwarehouse_add', '/vendor/globalwarehouse/add'],
+    ['globalwarehouse_edit_id', '/vendor/globalwarehouse/edit/1'],
+
+    // Licenses - vendor routes
+    ['licenses', '/vendor/licenses'],
+    ['licenses_connect', '/vendor/licenses/connect'],
+
+    // Main/Dashboard - use dashboard prefix
+    ['main', '/dashboard'],
+    ['dashboard', '/dashboard'],
+
+    // Material info - vendor route
+    ['material_info', '/vendor/material-info'],
+    ['material-info', '/vendor/material-info'],
+
+    // Modifications - vendor routes
+    ['modifications', '/vendor/modifications'],
+    ['modifications_add', '/vendor/modifications/add'],
+    ['modifications_edit', '/vendor/modifications/edit'],
+
+    // Operations - vendor routes
+    ['operations_import', '/vendor/operations/import'],
+    ['operations_import_check', '/vendor/operations/import/check'],
+    ['operations_import_details', '/vendor/operations/import/details'],
+    ['operations_inventory', '/vendor/operations/inventory'],
+    ['operations_inventory_add', '/vendor/operations/inventory/add'],
+    ['operations_inventory_details_id', '/vendor/operations/inventory/details/1'],
+    ['operations_inventory_edit_id', '/vendor/operations/inventory/edit/1'],
+    ['operations_overvaluation', '/vendor/operations/overvaluation'],
+    ['operations_overvaluation_create', '/vendor/operations/overvaluation/create'],
+    ['operations_overvaluation_details_id', '/vendor/operations/overvaluation/details/1'],
+    ['operations_overvaluation_edit_id', '/vendor/operations/overvaluation/edit/1'],
+    ['operations_transfer', '/vendor/operations/transfer'],
+    ['operations_transfer_add', '/vendor/operations/transfer/add'],
+    ['operations_transfer_details_id', '/vendor/operations/transfer/details/1'],
+    ['operations_transfer_edit_id', '/vendor/operations/transfer/edit/1'],
+    ['operations_transfer_refund', '/vendor/operations/transfer/refund'],
+
+    // Plans - vendor routes
+    ['plans', '/vendor/plans'],
+    ['plans_add', '/vendor/plans/add'],
+    ['plans_edit_id', '/vendor/plans/edit/1'],
+
+    // Prices - vendor routes
+    ['prices', '/vendor/prices'],
+    ['prices_add', '/vendor/prices/add'],
+    ['prices_points', '/vendor/prices/points'],
+    ['prices_points_add', '/vendor/prices/points/add'],
+
+    // Products - vendor routes
+    ['products', '/vendor/products'],
+    ['products_add', '/vendor/products/add'],
+    ['products_details_id', '/vendor/products/details/1'],
+    ['products_edit_id', '/vendor/products/edit/1'],
+    ['products_requests', '/vendor/products/requests'],
+
+    // Product warehouse - vendor route
+    ['productwarehouse', '/vendor/productwarehouse'],
+
+    // Recipes - vendor routes
+    ['recipes', '/vendor/recipes'],
+    ['recipes_add', '/vendor/recipes/add'],
+    ['recipes_edit_id', '/vendor/recipes/edit/1'],
   ]);
 
   try {
@@ -277,6 +366,12 @@ function looksLikeDashboard(url, bodyText) {
   return /\/dashboard\/?$/i.test(u) && /Начало работы|Складские операции|Финансовые операции/.test(text);
 }
 
+function isEmptyContent(bodyText) {
+  const text = String(bodyText || '').trim();
+  // White screen or almost empty page - less than 50 chars means something went wrong
+  return text.length < 50;
+}
+
 async function openLesson(page, lesson, aliases) {
   const { materializedRoute, candidates } = buildCandidateUrls(lesson, aliases);
 
@@ -286,6 +381,13 @@ async function openLesson(page, lesson, aliases) {
     await ensureAuthenticated(page);
     const bodyText = await page.locator('body').innerText().catch(() => '');
     const currentUrl = page.url();
+
+    // Skip empty/white-screen pages and continue to next candidate
+    if (isEmptyContent(bodyText)) {
+      warn(`Empty content for ${candidate}, trying next...`);
+      continue;
+    }
+
     if (!looksLikeDashboard(currentUrl, bodyText) || /\/dashboard\//.test(currentUrl) || /\/vendor\//.test(currentUrl) || /\/admin\//.test(currentUrl) || /\/salepoint\//.test(currentUrl)) {
       return { materializedRoute, resolvedUrl: currentUrl, bodyText };
     }
