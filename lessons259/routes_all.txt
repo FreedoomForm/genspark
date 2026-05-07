@@ -1,259 +1,179 @@
-/ado
-/ado/:id
-/avatars
-/barcodes
-/barcodes/create
-/barcodes/print
-/cabinet/cashboxes
-/cabinet/license
-/cabinet/subscriptions
-/cabinet/tariffs
-/categories
-/categories/add
-/categories/edit/:id
-/categories/sub/add/:id
-/categories/subcategories/:id
-/clients
-/clients/add
-/clients/details/:id
-/clients/details/history
-/clients/details/history/:id
-/clients/loyalty
-/clients/loyalty/edit
-/clients/loyalty/history/:id
-/courier/details/:id
-/courier/edit/:id
-/couriers
-/couriers/add
-/defaultikpu
-/defaultikpu/add
-/defaultikpu/edit/:id
-/devices
-/docs
-/drivers
-/drivers/add
-/drivers/edit/:id
-/favorites
-/favorites/add
-/finance/accounts
-/finance/accounts/new
-/finance/balance
-/finance/balance/details/:param
-/finance/create
-/finance/create/expense
-/finance/create/receipt
-/finance/edit/:id
-/finance/expense
-/finance/paymentvoucher
-/finance/paymentvoucher/create
-/finance/paymentvoucher/details/:id
-/finance/receipt
-/finance/requests
-/finance/transactions/:id
-/finance/transactions/create/:id
-/globalwarehouse
-/globalwarehouse/add
-/globalwarehouse/edit/:id
-/grouping
-/information
-/information/add
-/information/edit/:id
-/interface
-/layout
-/licenses
-/licenses/connect
-/main
-/markingaudit
-/markingaudit/waresaudit
-/material-info
-/menu
-/menu/add
-/menu/edit/:id
-/menu/product/details/:id
-/menu/product/details/movement/:id
-/menu/product/edit/:id
-/menu/productrecept/add
-/menu/products/:id
-/menu/products/add
-/modifications
-/modifications/add
-/modifications/edit
-/operations/import
-/operations/import/check
-/operations/import/details
-/operations/inventory
-/operations/inventory/add
-/operations/inventory/details/:id
-/operations/inventory/edit/:id
-/operations/overvaluation
-/operations/overvaluation/create
-/operations/overvaluation/details/:id
-/operations/overvaluation/edit/:id
-/operations/transfer
-/operations/transfer/add
-/operations/transfer/details/:id
-/operations/transfer/edit/:id
-/operations/transfer/refund
-/orders
-/orders/active
-/orders/booking/:id
-/orders/delay
-/orders/delited
-/orders/live/:id
-/orders/online/:id
-/orders/order/refund/details/:id
-/orders/order/refundlist/:id
-/orders/refund/create/:id
-/orders/refunds
-/orders/takeaway/:id
-/parameters
-/parameters/info/:id
-/parameters/new
-/paramsreport
-/paymentmethods
-/paymentmethods/edit
-/permissions
-/permissions/add
-/permissions/edit/:id
-/plans
-/plans/add
-/plans/edit/:id
-/plu
-/prices
-/prices/add
-/prices/edit/:id
-/prices/points
-/prices/points/add
-/prices/points/edit/:id
-/pricing
-/pricing/add
-/pricing/edit/:id
-/printers
-/printers/edit/:id
-/printers/new
-/product/changelog/:id
-/productions/manufacturingrecords
-/productions/manufacturingrecords/:id
-/productions/manufacturingrecords/new
-/productions/technicalcards
-/productions/technicalcards/details/:id
-/productions/technicalcards/details/edit
-/productions/technicalcards/new
-/productreport
-/products
-/products/details/history/:id
-/products/details/movement/:id
-/products/history
-/products/requests
-/products/stats/:id
-/products/writeoff
-/products/writeoff/add
-/products/writeoff/details/:id
-/products/writeoff/edit/:id
-/productwarehouse
-/profile
-/profile/edit
-/providers
-/providers/add
-/providers/add/provider
-/providers/conteragents
-/providers/conteragents/details/:id
-/providers/conteragents/details/products/:id
-/providers/conteragents/edit/:id
-/providers/edit/provider/:id
-/providers/mutual
-/providers/mutual/details/:name
-/providers/receipts/
-/providers/receipts/details/:id
-/providers/receipts/edit/:id
-/providers/receipts/payments
-/providers/receipts/payments/createpayment/:name
-/providers/receipts/refunds/createrefund
-/providers/refunds
-/providers/refunds/details/:id
-/providers/refunds/edit/:id
-/providers/requests
-/providers/requests/details
-/providers/requests/details/refund
-/realization
-/realization/add
-/realizations/details/:id
-/realizations/edit/:id
-/recipes
-/recipes/add
-/recipes/edit
-/refunds/details
-/register
-/register/final
-/report
-/reports
-/reports/abc
-/reports/abcxyz
-/reports/export-products
-/reports/material-info
-/reports/pl
-/reports/saldo
-/reports/xyz
-/request
-/request/edit
-/request/procces
-/requests
-/requests/details/:id
-/roles
-/roles/add
-/roles/edit
-/salary
-/saldo
-/salepoint/edit/:id
-/salepoints
-/salepoints/add
-/sellers
-/sellers/add
-/sellers/edit/:id
-/settings/checks
-/settings/checks/:id
-/settings/checks/add
-/shifts
-/smsmailing
-/smsmailing/add
-/smsmailing/edit/:id
-/smsmailing/new
-/smstemplates
-/statistics
-/stocks
-/stocks/types
-/stocks/types/:type/products
-/stocks/types/benefit
-/stocks/types/carouseldiscount
-/stocks/types/checkwithbenefit
-/stocks/types/fixprice
-/stocks/types/oneplusone
-/tables
-/tags
-/tags/add
-/tags/edit/:id
-/tariffs
-/tgbot
-/top-sales
-/vendor-promocodes
-/vendor-promocodes/add
-/vendor-promocodes/edit/:id
-/vendor/add
-/vendor/edit/:id
-/vendors
-/warehouse
-/warehouse/add/product
-/warehouse/add/request
-/without-movement
-/workers
-/workers/add
-/workers/details/history/:id
-/workers/edit/:id
-/workers/info/orders/:id
-/workers/info/permission/:id
-/workers/info/salary/:id
-/workers/info/shift/:id
-/workers/info/shift/income/:id
-/workers/salary/issue/:id
-/workers/shifts
-/z-reports
+**Route:** `/ado`  
+**Route:** `/avatars`  
+**Route:** `/barcodes/create`  
+**Route:** `/barcodes/print`  
+**Route:** `/barcodes`  
+**Route:** `/cabinet/cashboxes`  
+**Route:** `/cabinet/license`  
+**Route:** `/cabinet/subscriptions`  
+**Route:** `/cabinet/tariffs`  
+**Route:** `/categories/add`  
+**Route:** `/categories`  
+**Route:** `/clients/add`  
+**Route:** `/clients/details/history`  
+**Route:** `/clients/loyalty/edit`  
+**Route:** `/clients/loyalty`  
+**Route:** `/clients`  
+**Route:** `/couriers/add`  
+**Route:** `/couriers`  
+**Route:** `/defaultikpu/add`  
+**Route:** `/defaultikpu`  
+**Route:** `/devices`  
+**Route:** `/docs`  
+**Route:** `/drivers/add`  
+**Route:** `/drivers`  
+**Route:** `/favorites/add`  
+**Route:** `/favorites`  
+**Route:** `/finance/accounts/new`  
+**Route:** `/finance/accounts`  
+**Route:** `/finance/balance/details/:param`  
+**Route:** `/finance/balance`  
+**Route:** `/finance/create/expense`  
+**Route:** `/finance/create/receipt`  
+**Route:** `/finance/create`  
+**Route:** `/finance/expense`  
+**Route:** `/finance/paymentvoucher/create`  
+**Route:** `/finance/paymentvoucher`  
+**Route:** `/finance/receipt`  
+**Route:** `/finance/requests`  
+**Route:** `/globalwarehouse/add`  
+**Route:** `/globalwarehouse`  
+**Route:** `/grouping`  
+**Route:** `/information/add`  
+**Route:** `/information`  
+**Route:** `/interface`  
+**Route:** `/layout`  
+**Route:** `/licenses/connect`  
+**Route:** `/licenses`  
+**Route:** `/main`  
+**Route:** `/markingaudit/waresaudit`  
+**Route:** `/markingaudit`  
+**Route:** `/material-info`  
+**Route:** `/menu/add`  
+**Route:** `/menu/productrecept/add`  
+**Route:** `/menu/products/add`  
+**Route:** `/menu`  
+**Route:** `/modifications/add`  
+**Route:** `/modifications/edit`  
+**Route:** `/modifications`  
+**Route:** `/operations/import/check`  
+**Route:** `/operations/import/details`  
+**Route:** `/operations/import`  
+**Route:** `/operations/inventory/add`  
+**Route:** `/operations/inventory`  
+**Route:** `/operations/overvaluation/create`  
+**Route:** `/operations/overvaluation`  
+**Route:** `/operations/transfer/add`  
+**Route:** `/operations/transfer/refund`  
+**Route:** `/operations/transfer`  
+**Route:** `/orders/active`  
+**Route:** `/orders/delay`  
+**Route:** `/orders/delited`  
+**Route:** `/orders/refunds`  
+**Route:** `/orders`  
+**Route:** `/parameters/new`  
+**Route:** `/parameters`  
+**Route:** `/paramsreport`  
+**Route:** `/paymentmethods/edit`  
+**Route:** `/paymentmethods`  
+**Route:** `/permissions/add`  
+**Route:** `/permissions`  
+**Route:** `/plans/add`  
+**Route:** `/plans`  
+**Route:** `/plu`  
+**Route:** `/prices/add`  
+**Route:** `/prices/points/add`  
+**Route:** `/prices/points`  
+**Route:** `/prices`  
+**Route:** `/pricing/add`  
+**Route:** `/pricing`  
+**Route:** `/printers/new`  
+**Route:** `/printers`  
+**Route:** `/productions/manufacturingrecords/new`  
+**Route:** `/productions/manufacturingrecords`  
+**Route:** `/productions/technicalcards/details/edit`  
+**Route:** `/productions/technicalcards/new`  
+**Route:** `/productions/technicalcards`  
+**Route:** `/productreport`  
+**Route:** `/products/history`  
+**Route:** `/products/requests`  
+**Route:** `/products/writeoff/add`  
+**Route:** `/products/writeoff`  
+**Route:** `/products`  
+**Route:** `/productwarehouse`  
+**Route:** `/profile/edit`  
+**Route:** `/profile`  
+**Route:** `/providers/add/provider`  
+**Route:** `/providers/add`  
+**Route:** `/providers/conteragents`  
+**Route:** `/providers/mutual/details/:name`  
+**Route:** `/providers/mutual`  
+**Route:** `/providers/receipts/payments/createpayment/:name`  
+**Route:** `/providers/receipts/payments`  
+**Route:** `/providers/receipts/refunds/createrefund`  
+**Route:** `/providers/receipts/`  
+**Route:** `/providers/refunds`  
+**Route:** `/providers/requests/details/refund`  
+**Route:** `/providers/requests/details`  
+**Route:** `/providers/requests`  
+**Route:** `/providers`  
+**Route:** `/realization/add`  
+**Route:** `/realization`  
+**Route:** `/recipes/add`  
+**Route:** `/recipes/edit`  
+**Route:** `/recipes`  
+**Route:** `/refunds/details`  
+**Route:** `/register/final`  
+**Route:** `/register`  
+**Route:** `/reports/abcxyz`  
+**Route:** `/reports/abc`  
+**Route:** `/reports/export-products`  
+**Route:** `/reports/material-info`  
+**Route:** `/reports/pl`  
+**Route:** `/reports/saldo`  
+**Route:** `/reports/xyz`  
+**Route:** `/reports`  
+**Route:** `/report`  
+**Route:** `/requests`  
+**Route:** `/request/edit`  
+**Route:** `/request/procces`  
+**Route:** `/request`  
+**Route:** `/roles/add`  
+**Route:** `/roles/edit`  
+**Route:** `/roles`  
+**Route:** `/salary`  
+**Route:** `/saldo`  
+**Route:** `/salepoints/add`  
+**Route:** `/salepoints`  
+**Route:** `/sellers/add`  
+**Route:** `/sellers`  
+**Route:** `/settings/checks/add`  
+**Route:** `/settings/checks`  
+**Route:** `/shifts`  
+**Route:** `/smsmailing/add`  
+**Route:** `/smsmailing/new`  
+**Route:** `/smsmailing`  
+**Route:** `/smstemplates`  
+**Route:** `/statistics`  
+**Route:** `/stocks/types/benefit`  
+**Route:** `/stocks/types/carouseldiscount`  
+**Route:** `/stocks/types/checkwithbenefit`  
+**Route:** `/stocks/types/fixprice`  
+**Route:** `/stocks/types/oneplusone`  
+**Route:** `/stocks/types/:type/products`  
+**Route:** `/stocks/types`  
+**Route:** `/stocks`  
+**Route:** `/tables`  
+**Route:** `/tags/add`  
+**Route:** `/tags`  
+**Route:** `/tariffs`  
+**Route:** `/tgbot`  
+**Route:** `/top-sales`  
+**Route:** `/warehouse/add/product`  
+**Route:** `/warehouse/add/request`  
+**Route:** `/warehouse`  
+**Route:** `/without-movement`  
+**Route:** `/workers/add`  
+**Route:** `/workers/shifts`  
+**Route:** `/workers`  
+**Route:** `/z-reports`  

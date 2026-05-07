@@ -1,16 +1,16 @@
-# Urok 181. Сотрудники / add
+# Urok 173. Склад / add / Товар
 
-**Route:** `/workers/add`  
-**Razdel:** Сотрудники  
-**URL:** https://admin.lume.uz/workers/add
+**Route:** `/warehouse/add/product`  
+**Razdel:** Склад  
+**URL:** https://admin.lume.uz/warehouse/add/product
 
-![Screenshot](../shots259/249_workers__add.png)
+![Screenshot](../shots259/245_warehouse__add__product.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/workers/add` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/warehouse/add/product` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto forma sozdaniya v razdele «Сотрудники». Na takih stranitsah obyčno zapolnyayut polya, dobavlyayut dannye i sohranyayut novuyu zapis.
+Eto forma sozdaniya v razdele «Склад». Na takih stranitsah obyčno zapolnyayut polya, dobavlyayut dannye i sohranyayut novuyu zapis.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 
@@ -25,6 +25,7 @@ Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 - Esli na stranitse est tablitsa, srazu proveri poisk, filtr i paginatsiyu.
 - Parametricheskiye route-y s :id, :name, :type i drugimi segmentami obychno zavisyat ot konkretnoy zapisi v baze.
 - Posle sohraneniya proveri, izmenilsya li status, spisok ili kartochka objekta.
+- Dlya skladskih deystviy sveri sklad, ostatki i kolichestvo do provedeniya dokumenta.
 
 ## Fragment teksta so stranitsy
 ```

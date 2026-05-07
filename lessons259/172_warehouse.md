@@ -1,16 +1,16 @@
-# Urok 182. Сотрудники / Смены
+# Urok 172. Склад
 
-**Route:** `/workers/shifts`  
-**Razdel:** Сотрудники  
-**URL:** https://admin.lume.uz/workers/shifts
+**Route:** `/warehouse`  
+**Razdel:** Склад  
+**URL:** https://admin.lume.uz/warehouse
 
-![Screenshot](../shots259/258_workers__shifts.png)
+![Screenshot](../shots259/244_warehouse.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/workers/shifts` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/warehouse` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «Сотрудники». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Склад». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 
@@ -25,6 +25,7 @@ Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 - Esli na stranitse est tablitsa, srazu proveri poisk, filtr i paginatsiyu.
 - Parametricheskiye route-y s :id, :name, :type i drugimi segmentami obychno zavisyat ot konkretnoy zapisi v baze.
 - Posle sohraneniya proveri, izmenilsya li status, spisok ili kartochka objekta.
+- Dlya skladskih deystviy sveri sklad, ostatki i kolichestvo do provedeniya dokumenta.
 
 ## Fragment teksta so stranitsy
 ```

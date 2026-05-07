@@ -1,25 +1,25 @@
-# Urok 173. Промокоды продавца / add
+# Urok 179. Z-отчеты
 
-**Route:** `/vendor-promocodes/add`  
-**Razdel:** Общее  
-**URL:** https://admin.lume.uz/vendor-promocodes/add
+**Route:** `/z-reports`  
+**Razdel:** Отчёты  
+**URL:** https://admin.lume.uz/z-reports
 
-![Screenshot](../shots259/239_vendor-promocodes__add.png)
+![Screenshot](../shots259/259_z-reports.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/vendor-promocodes/add` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/z-reports` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto forma sozdaniya v razdele «Промокоды продавца». Na takih stranitsah obyčno zapolnyayut polya, dobavlyayut dannye i sohranyayut novuyu zapis.
+Eto osnovnaya rabochaya stranitsa razdela «Z-отчеты». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 
 ## Poshagovyy stsenariy raboty
 1. Voydite v admin-panel i otkroyte nuzhnyy route cherez levoye menyu ili pryamoy adres.
 2. Proverte verhniye filtry, poisk, knopy sozdaniya ili tablichnyy spisok elementov.
-3. Zapolnite obyazatelnyye polya formy.
-4. Pri neobhodimosti vibерите svyazannye spravochniki, kategorii ili sklady.
-5. Nazhmiте knopku sohraneniya i proverьте, chto novaya zapis poyavilas v spiske.
+3. Ispolzuyte poisk, filtry po date, statusu, skladu ili kategorii.
+4. Otkroyte nuzhnuyu stroku dlya detalnogo prosmotra ili redaktirovaniya.
+5. Pri neobhodimosti eksportiruyte, pechataite ili sozdavayte novyye zapisi iz etogo razdela.
 
 ## Poleznye podskazki
 - Esli na stranitse est tablitsa, srazu proveri poisk, filtr i paginatsiyu.

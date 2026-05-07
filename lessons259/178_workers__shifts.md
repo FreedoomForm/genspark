@@ -1,16 +1,16 @@
-# Urok 179. Без движения
+# Urok 178. Сотрудники / Смены
 
-**Route:** `/without-movement`  
-**Razdel:** Общее  
-**URL:** https://admin.lume.uz/without-movement
+**Route:** `/workers/shifts`  
+**Razdel:** Сотрудники  
+**URL:** https://admin.lume.uz/workers/shifts
 
-![Screenshot](../shots259/247_without-movement.png)
+![Screenshot](../shots259/258_workers__shifts.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/without-movement` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/workers/shifts` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «Без движения». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Сотрудники». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 

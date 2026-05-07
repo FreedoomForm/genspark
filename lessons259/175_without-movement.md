@@ -1,16 +1,16 @@
-# Urok 176. Склад
+# Urok 175. Без движения
 
-**Route:** `/warehouse`  
-**Razdel:** Склад  
-**URL:** https://admin.lume.uz/warehouse
+**Route:** `/without-movement`  
+**Razdel:** Общее  
+**URL:** https://admin.lume.uz/without-movement
 
-![Screenshot](../shots259/244_warehouse.png)
+![Screenshot](../shots259/247_without-movement.png)
 
 ## Tsel uroka
-Razobrat, dlya chego nuzhen route `/warehouse` i kak s nim rabotat v admin-paneli Lume.
+Razobrat, dlya chego nuzhen route `/without-movement` i kak s nim rabotat v admin-paneli Lume.
 
 ## Chto eto za stranitsa
-Eto osnovnaya rabochaya stranitsa razdela «Склад». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
+Eto osnovnaya rabochaya stranitsa razdela «Без движения». Ona ispolzuetsya dlya poiska, fil'trov, prosmotra tablits i perehoda k svyazannym deystviyam.
 
 Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 
@@ -25,7 +25,6 @@ Osnovnoy zagolovok ili samyy zametnyy tekst na ekrane: **990123456**.
 - Esli na stranitse est tablitsa, srazu proveri poisk, filtr i paginatsiyu.
 - Parametricheskiye route-y s :id, :name, :type i drugimi segmentami obychno zavisyat ot konkretnoy zapisi v baze.
 - Posle sohraneniya proveri, izmenilsya li status, spisok ili kartochka objekta.
-- Dlya skladskih deystviy sveri sklad, ostatki i kolichestvo do provedeniya dokumenta.
 
 ## Fragment teksta so stranitsy
 ```
